@@ -5,18 +5,20 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+#define SERVERPORT 5051
+
 int main(void) {
         int sock_fd, new_fd, bytes, len;
         struct sockaddr_in seraddr, cliaddr;
         char data[1024];
-
+        printf("dd\n");
         //listen socket open
         sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 
         memset(&seraddr, 0, sizeof(seraddr));
         seraddr.sin_family = AF_INET;
         seraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        seraddr.sin_port = htons(5050);
+        seraddr.sin_port = htons(SERVERPORT);
         if(bind(sock_fd, (struct sockaddr*)&seraddr, sizeof(seraddr)) < 0) {
                 perror("Bind failed");
                 close(sock_fd);
@@ -30,7 +32,7 @@ int main(void) {
                 new_fd = accept(sock_fd, (struct sockaddr*)&cliaddr, &len);
                 memset(&data, 0, sizeof(data));
                 bytes = recv(new_fd, data, 1024, 0);    //http reqeust -> data buffer
-                read_request_line(data);
+                //read_request_line(data);
 
                 //remote socket open
                 int sock_remote_fd;
@@ -49,7 +51,7 @@ int main(void) {
                 printf("send complete\n");
                 recv(sock_remote_fd, response, 1024, 0);        //recv http response -> response buffer
                 printf("%s\n", response);
-                printf("%s\n", response);
+                //printf("%s\n", response);
 
                 send(new_fd, response, 1024, 0);                //send response to client
 
