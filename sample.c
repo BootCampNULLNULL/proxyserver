@@ -87,6 +87,8 @@ int main(void) {
                 }
 
                 //이벤트에 따른 작업
+                //소켓에 읽기 이벤트 발생시 recv해서 connect_remote()
+                //클라이언트가 접속하면 통신소켓을 만들고, epoll 객체에 추가
                 for (int i = 0; i < event_count; i++){
                         if(events[i].data.fd == sock_fd) {
                                 new_fd = accept(sock_fd, (struct sockaddr*)&cliaddr, &len);
@@ -108,10 +110,15 @@ int main(void) {
                                 }
                         }
                 }
-                //close(new_fd);
+                
         }
-
+        //closeall()
         close(sock_fd);
         close(epoll_fd);
         return 0;
 }
+
+//문제점 1. epoll_wait() 함수는 소켓 버퍼에 데이터가 일부라도 도착하면 즉시 이벤트가 발생된걸로 처리하여 반환
+//         소켓에 데이터가 온전히 도착하지 않은 상태에서 connect_remote()가 호출되어 문제가 발생할 수 있음 -> http 요청은 \r\n\r\n으로 끝나므로 conncet_remote() 호출 전에 데이터 끝을 확인
+//문제점 2. connect_remote()의 로직은 블로킹 IO 방식이므로 실제 대상 서버와의 통신은 비동기 처리가 되지 않음 -> 멀티스레드 구조 적용 필요
+//문제점 3. socket을 제대로 닫지 않아, 리소스 누수 발생 -> 소켓 배열 전체를 순회하며 하나씩 close하는 로직 필요요
