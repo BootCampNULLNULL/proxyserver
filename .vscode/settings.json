@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "pthread.h": "c",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
+    }
+}
