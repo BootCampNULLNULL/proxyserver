@@ -37,6 +37,7 @@ static void* connect_remote(void* arg) {
                 task_t* task;
 
                 pthread_mutex_lock(&queue_mutex);
+                //task queue가 비어있으면, queue_cond가 set되는 것을 기다림 -> 메인에서 작업추가시 queue_cond 세트
                 while (task_queue.empty()) {
                         pthread_cond_wait(&queue_cond, &queue_mutex);
                 }
@@ -45,7 +46,7 @@ static void* connect_remote(void* arg) {
                 pthread_mutex_unlock(&queue_mutex);
 
                 int remote_fd = socket(AF_INET, SOCK_STREAM, 0);
-                set_nonblocking(remote_fd);
+                //set_nonblocking(remote_fd);
 
                 struct sockaddr_in remoteaddr;
                 memset(&remoteaddr, 0, sizeof(remoteaddr));
@@ -53,13 +54,21 @@ static void* connect_remote(void* arg) {
                 remoteaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
                 remoteaddr.sin_port = htons(8080);
 
-                connect(remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr));
-
+                if(connect(remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr)) < 0) {
+                        perror("remote server connect failed\n");
+                }
+                printf("%s\n", task->data);
                 // 데이터 송신 및 응답 수신
-                send(remote_fd, task->data, strlen(task->data), 0); // 송신 길이 수정
+
+                send(remote_fd, task->data, 1024, 0); // 송신 길이 수정
                 char response[1024];
-                memset(&response, 0, sizeof(response));
-                int recv_len = recv(remote_fd, response, sizeof(response), 0); // 데이터 수신
+                memset(&response, 0, 1024);
+
+               //sleep(1000);
+
+                int recv_len = recv(remote_fd, response, 1024, 0); // 데이터 수신
+
+                printf("%s\n", response);
 
                 if (recv_len > 0) {
                         printf("%s\n", response);
@@ -99,7 +108,7 @@ int main(void) {
         listen(server_fd, 10);
         len = sizeof(cliaddr);
 
-        //epoll 인스턴스스 생성
+        //epoll 인스턴스 생성
         int epoll_fd = epoll_create1(0);
         if(epoll_fd == -1) {
                 perror("Epoll createion failed");
@@ -146,7 +155,7 @@ int main(void) {
                         } else {
                                 //클라이언트 데이터 수신
                                 memset(&data, 0, sizeof(data));
-                                bytes = recv(client_fd, data, 1024, 0);
+                                bytes = recv(events[i].data.fd, data, 1024, 0);
 
                                 //0이면 연결 끊김, 0보다 크면 데이터 읽음
                                 if(bytes > 0) {
@@ -154,10 +163,11 @@ int main(void) {
                                         task_t* task = (task_t*)malloc(sizeof(task_t));
                                         task->client_fd = events[i].data.fd;
                                         strncpy(task->data, data, bytes);
+                                        //printf("%s\n", task->data);
 
                                         pthread_mutex_lock(&queue_mutex);
                                         task_queue.push(task);
-                                        pthread_cond_signal(&queue_cond);
+                                        pthread_cond_signal(&queue_cond);       //queue_cond 조건 변수를 기다리는 스레드 하나를 깨움움
                                         pthread_mutex_unlock(&queue_mutex);
                                         
                                         // epoll에서 클라이언트 fd 제거
