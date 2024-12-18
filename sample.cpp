@@ -15,9 +15,16 @@
 #define MAX_EVENTS 1000
 #define THREAD_POOL_SIZE 8
 
+typedef enum {
+        CLIENT_READ,
+        CLIENT_WRITE,
+        REMOTE_SERVER_READ,
+        REMOTE_SERVER_WRITE
+} task_state_t;
+
 typedef struct {
-        int client_fd;
-        char data[1024];
+        int src_fd;
+        int dst_fd;
 } task_t;
 
 //작업큐
@@ -26,7 +33,7 @@ pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queue_cond = PTHREAD_COND_INITIALIZER;
 
 // Non-blocking 설정 함수
-void set_nonblocking(int fd) {
+static void set_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
@@ -36,7 +43,7 @@ static void* connect_remote(void* arg) {
         while(1){
                 task_t* task;
 
-                pthread_mutex_lock(&queue_mutex);
+                pthread_mutex_lock(&queue_mutex);       //mutex
                 //task queue가 비어있으면, queue_cond가 set되는 것을 기다림 -> 메인에서 작업추가시 queue_cond 세트
                 while (task_queue.empty()) {
                         pthread_cond_wait(&queue_cond, &queue_mutex);
@@ -85,13 +92,42 @@ static void* connect_remote(void* arg) {
         return NULL;
 }
 
+//src에서 recv -> dst로 send
+static void* thread_worker(void* arg) {
+    while (1) {
+        task_t* task;
+
+        // 작업 큐에서 작업 가져오기
+        pthread_mutex_lock(&queue_mutex);
+        while (task_queue.empty()) {
+            pthread_cond_wait(&queue_cond, &queue_mutex);
+        }
+        task = task_queue.front();
+        task_queue.pop();
+        pthread_mutex_unlock(&queue_mutex);
+
+        // 작업 처리 (데이터 중계)
+        char buffer[1024];
+        int len = recv(task->src_fd, buffer, sizeof(buffer), 0);
+        if (len > 0) {
+            send(task->dst_fd, buffer, len, 0);
+        } else if (len == 0 || (len < 0 && errno != EAGAIN)) {
+            // 연결 종료 또는 오류 발생 시 소켓 닫기
+            close(task->src_fd);
+            close(task->dst_fd);
+        }
+        free(task);
+    }
+    return NULL;
+}
+
 int main(void) {
-        int server_fd, client_fd, bytes;
+        int server_fd, bytes;
         socklen_t len;
-        struct sockaddr_in seraddr, cliaddr;
+        struct sockaddr_in seraddr;
         char data[1024];
 
-        //서버 소켓 생성 및 설정정
+        //서버 소켓 생성 및 설정
         server_fd = socket(AF_INET, SOCK_STREAM, 0);
         set_nonblocking(server_fd);
 
@@ -106,7 +142,6 @@ int main(void) {
                 exit(EXIT_FAILURE);
         }
         listen(server_fd, 10);
-        len = sizeof(cliaddr);
 
         //epoll 인스턴스 생성
         int epoll_fd = epoll_create1(0);
@@ -118,11 +153,10 @@ int main(void) {
 
         //epoll 이벤트 구조체
         struct epoll_event ev, events[MAX_EVENTS];
-        int event_count;
         ev.events = EPOLLIN;
         ev.data.fd = server_fd;
 
-        //epoll 객체에 소켓 등록
+        //epoll에 서버 소켓 등록
         if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ev) == -1) {
                 perror("Epoll control failed");
                 close(server_fd);
@@ -133,12 +167,12 @@ int main(void) {
         //스레드 풀 초기화
         pthread_t threads[THREAD_POOL_SIZE];
         for(int i = 0; i < THREAD_POOL_SIZE; i++){
-                pthread_create(&threads[i], NULL, connect_remote, NULL);
+                pthread_create(&threads[i], NULL, thread_worker, NULL);
         }
 
         while(1) {
                 //이벤트 대기
-                event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+                int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
                 if(event_count == -1) {
                         perror("Epoll wait Failed");
                         break;
@@ -147,9 +181,13 @@ int main(void) {
                 for (int i = 0; i < event_count; i++){
                         if(events[i].data.fd == server_fd) {
                                 //새 클라이언트 연결 처리
-                                client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
+                                struct sockaddr_in cliaddr;
+                                socklen_t len = sizeof(cliaddr);
+                                int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
                                 set_nonblocking(client_fd);
-                                ev.events = EPOLLIN;
+
+                                // epoll에 클라이언트 소켓 등록
+                                ev.events = EPOLLIN | EPOLLET;
                                 ev.data.fd = client_fd;
                                 epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                         } else {
@@ -157,17 +195,14 @@ int main(void) {
                                 memset(&data, 0, sizeof(data));
                                 bytes = recv(events[i].data.fd, data, 1024, 0);
 
-                                //0이면 연결 끊김, 0보다 크면 데이터 읽음
                                 if(bytes > 0) {
-                                        // 작업 큐에 task 추가
                                         task_t* task = (task_t*)malloc(sizeof(task_t));
                                         task->client_fd = events[i].data.fd;
                                         strncpy(task->data, data, bytes);
-                                        //printf("%s\n", task->data);
 
                                         pthread_mutex_lock(&queue_mutex);
                                         task_queue.push(task);
-                                        pthread_cond_signal(&queue_cond);       //queue_cond 조건 변수를 기다리는 스레드 하나를 깨움움
+                                        pthread_cond_signal(&queue_cond);       //queue_cond 조건 변수를 기다리는 스레드 하나를 깨움
                                         pthread_mutex_unlock(&queue_mutex);
                                         
                                         // epoll에서 클라이언트 fd 제거
