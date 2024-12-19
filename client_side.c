@@ -84,34 +84,31 @@ int main(void) {
         for (int i = 0; i < event_count; i++) {
             if (events[i].data.fd == server_fd) {
                 // 새 클라이언트 연결 처리
-                struct sockaddr_in cliaddr;
-                socklen_t len = sizeof(cliaddr);
-                int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
-                if (client_fd < 0) {
-                    perror("Accept failed");
-                    continue;
-                }
-                set_nonblocking(client_fd);
+                while(1) {
+                    struct sockaddr_in cliaddr;
+                    socklen_t len = sizeof(cliaddr);
+                    int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
+                    if(client_fd < 0) {
+                        if(errno == EAGAIN || errno == EWOULDBLOCK) {
+                            // 모든 연결이 처리됨
+                            break;
+                        } else {
+                            perror("Accept failed");
+                            break;
+                        }
+                    }
+                    set_nonblocking(client_fd);
 
-                // 클라이언트 소켓을 epoll에 등록
-                task_t* task = (task_t*)malloc(sizeof(task_t));
-                if (!task) {
-                    perror("Task allocation failed");
-                    close(client_fd);
-                    continue;
-                }
-                task->client_fd = client_fd;
-                task->remote_fd = -1;
-                task->buffer_len = 0;
-                task->state = STATE_CLIENT_READ;
+                    task_t* task = (task_t*)malloc(sizeof(task_t));
+                    
+                    task->client_fd = client_fd;
+                    task->remote_fd = -1;
+                    task->buffer_len = 0;
+                    task->state = STATE_CLIENT_READ;
 
-                ev.events = EPOLLIN | EPOLLET;
-                ev.data.ptr = task;
-                if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1) {
-                    perror("Epoll add client failed");
-                    close(client_fd);
-                    free(task);
-                    continue;
+                    ev.events = EPOLLIN | EPOLLET;
+                    ev.data.ptr = task;
+                    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
             } else {
                 task_t* task = (task_t*)events[i].data.ptr;
@@ -120,46 +117,39 @@ int main(void) {
 
                 if (task->state == STATE_CLIENT_READ) {
                     // 클라이언트 데이터 수신
-                    task->buffer_len = recv(task->client_fd, task->buffer, sizeof(task->buffer), 0);
-                    if (task->buffer_len > 0) {
-                        // 원격 서버 연결 시도
+                    while((task->buffer_len = recv(task->client_fd, task->buffer, sizeof(task->buffer), 0)) > 0) {
+                        // 원격 서버 연결
                         task->remote_fd = socket(AF_INET, SOCK_STREAM, 0);
-                        if (task->remote_fd < 0) {
+                        if(task->remote_fd < 0) {
                             perror("Remote socket creation failed");
                             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
                             close(task->client_fd);
                             free(task);
-                            continue;
+                            break;
                         }
                         set_nonblocking(task->remote_fd);
 
+                        // http 요청 파싱 -> 원격 서버 접속 정보를 획득하여 소켓 연결 필요
+                        // 임시로 localhost:8080 하드코딩
                         struct sockaddr_in remoteaddr;
                         memset(&remoteaddr, 0, sizeof(remoteaddr));
                         remoteaddr.sin_family = AF_INET;
                         remoteaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
                         remoteaddr.sin_port = htons(8080);
 
-                        if (connect(task->remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr)) < 0) {
-                            if (errno != EINPROGRESS) {
-                                perror("Connect to remote server failed");
-                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                                close(task->client_fd);
-                                close(task->remote_fd);
-                                free(task);
-                                continue;
-                            }
-                        }
+                        connect(task->remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr));
 
                         ev.events = EPOLLOUT | EPOLLET;
-                        ev.data.ptr = task;
+                        ev.data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유
                         epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, &ev);
 
                         task->state = STATE_REMOTE_WRITE;
-                    } else if (task->buffer_len == 0 || (task->buffer_len == -1 && errno != EAGAIN)) {
-                        // 연결 종료
+                    }
+
+                    if(task->buffer_len == 0 || (task->buffer_len == -1 && errno != EAGAIN)) {
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
                         close(task->client_fd);
-                        if (task->remote_fd != -1) close(task->remote_fd);
+                        if(task->remote_fd != -1) close(task->remote_fd);
                         free(task);
                     }
                 } else if (task->state == STATE_REMOTE_WRITE) {
@@ -170,13 +160,25 @@ int main(void) {
                     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
                 } else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
-                    task->buffer_len = recv(task->remote_fd, task->buffer, sizeof(task->buffer), 0);
-                    if (task->buffer_len > 0) {
+                    while ((task->buffer_len = recv(task->remote_fd, task->buffer, sizeof(task->buffer), 0)) > 0) {
+                        printf("Data received from remote: %d bytes\n", task->buffer_len);
+                        printf("Buffer content: %.*s\n", task->buffer_len, task->buffer);
+
+                        // 클라이언트로 데이터 전송 상태로 전환
                         task->state = STATE_CLIENT_WRITE;
                         ev.events = EPOLLOUT | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
-                    } else if (task->buffer_len == 0 || (task->buffer_len == -1 && errno != EAGAIN)) {
-                        // 원격 서버 연결 종료
+                    }
+
+                    // 연결 종료 처리
+                    if (task->buffer_len == 0) {
+                        printf("Remote connection closed\n");
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                        close(task->remote_fd);
+                        close(task->client_fd);
+                        free(task);
+                    } else if (task->buffer_len == -1 && errno != EAGAIN) {
+                        perror("Error in recv from remote");
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                         close(task->remote_fd);
                         close(task->client_fd);
