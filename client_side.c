@@ -86,10 +86,11 @@ static int get_IP(char* ip_str, const char* hostname, const char* service) {
     inet_ntop(res->ai_family, addr, ip_str, INET_ADDRSTRLEN);
     printf("  %s: %s\n", ipver, ip_str);
 
-    freeaddrinfo(res);  // 메모리 해제
+    freeaddrinfo(res);
     return 0;
 }
 
+// 요청 라인 파싱 -> 구현 필요요
 static int get_request_line(const char* buf, char* hostname, char* service) {
     strcpy(hostname, "localhost");
     strcpy(service, "http");
@@ -109,13 +110,13 @@ static int connect_remote(const char* buf) {
     }
     set_nonblocking(remote_fd);
 
-    // http 요청 파싱 -> 원격 서버 접속 정보를 획득하여 소켓 연결 필요
-    // 임시로 localhost:8080 하드코딩
     struct sockaddr_in remoteaddr;
     memset(&remoteaddr, 0, sizeof(remoteaddr));
     remoteaddr.sin_family = AF_INET;
     remoteaddr.sin_addr.s_addr = inet_addr(ip_str);
 
+    //url에 포트가 명시된 경우 명시된 포트로 접속
+    //명시되지 않을 경우 디폴트로 http->80, https->443 으로 접속
     if(str4_cmp(req->service, 'h', 't', 't', 'p')) {
         remoteaddr.sin_port = htons(8080);
     }
@@ -211,10 +212,11 @@ int main(void) {
                 if (task->state == STATE_CLIENT_READ) {
                     // 클라이언트 데이터 수신
                     while((task->buffer_len = recv(task->client_fd, task->buffer, sizeof(task->buffer), 0)) > 0) {
-                        // 원격 서버 연결
+                        
                         printf("Data received from client: %d bytes\n", task->buffer_len);
                         printf("%s\n", task->buffer);
 
+                        // 원격 서버 연결
                         task->remote_fd = connect_remote(task->buffer);
 
                         ev.events = EPOLLOUT | EPOLLET;
@@ -243,7 +245,6 @@ int main(void) {
                         printf("Data received from remote: %d bytes\n", task->buffer_len);
                         printf("%s\n", task->buffer);
 
-                        // 클라이언트로 데이터 전송 상태로 전환
                         task->state = STATE_CLIENT_WRITE;
                         ev.events = EPOLLOUT | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
@@ -281,3 +282,4 @@ int main(void) {
 // 문제점 1. 긴 요청/응답 처리를 위한 버퍼 크기 고려X
 // 문제점 2. HTTP 요청/응답 데이터에 대한 유효성 고려X
 // 문제점 3. 실제 대상서버로 접속하는 로직 X
+// 문제점 4. getaddrinfo() - 여러 IP를 반환하는 도메인은 어떤 IP를 선택해서 connect 할건지?
