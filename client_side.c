@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200112L
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,8 +17,11 @@
 #define SERVERPORT 5051
 #define MAX_EVENTS 1000
 
-#define str4_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3
-
+static void set_nonblocking(int fd);
+static void log_exit(const char *fmt, ...);
+static void* xmalloc(size_t sz);
+static int get_IP(char* ip_str, const char* hostname, const char* service);
+static int connect_remote(const char* buf);
 
 typedef enum {
     STATE_CLIENT_READ,
@@ -46,7 +50,28 @@ void set_nonblocking(int fd) {
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
-static int get_IP(char* ip_str, const char* hostname, const char* service) {
+void log_exit(const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    fputc('\n', stderr);
+    
+    va_end(ap);
+    exit(1);
+}
+
+void* xmalloc(size_t sz)
+{
+    void *p;
+
+    p = malloc(sz);
+    if (!p) log_exit("failed to allocate memory");
+    return p;
+}
+
+int get_IP(char* ip_str, const char* hostname, const char* service) {
     struct addrinfo hints, *res, *p;
     //char ip_str[INET6_ADDRSTRLEN];  // IPv6도 포함한 크기
 
@@ -90,23 +115,26 @@ static int get_IP(char* ip_str, const char* hostname, const char* service) {
     return 0;
 }
 
-// 요청 라인 파싱 -> 구현 필요요
-static int get_request_line(const char* buf, char* hostname, char* service) {
+// 요청 라인 파싱
+int get_request_line(char* buf, char* hostname, char* service) {
+    
     strcpy(hostname, "localhost");
     strcpy(service, "http");
     return 0;
 }
 
-static int connect_remote(const char* buf) {
+int connect_remote(const char* buf) {
     request_line* req = (request_line*)malloc(sizeof(request_line));
 
+    //
     int req_status = get_request_line(buf, req->hostname, req->service);
     char ip_str[INET_ADDRSTRLEN];
     int addr_status = get_IP(ip_str, req->hostname, req->service);
 
     int remote_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(remote_fd < 0) {
-        perror("Remote socket creation failed");
+        log_exit("Remote socket creation failed");
+        //perror("Remote socket creation failed");
     }
     set_nonblocking(remote_fd);
 
@@ -126,7 +154,6 @@ static int connect_remote(const char* buf) {
     free(req);
     return remote_fd;
 }
-
 
 int main(void) {
     int server_fd;
