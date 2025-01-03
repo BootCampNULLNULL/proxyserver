@@ -233,9 +233,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
     SSL_CTX *dynamic_ctx = SSL_CTX_new(TLS_server_method());
     SSL_CTX_set_min_proto_version(dynamic_ctx, TLS1_2_VERSION);
     SSL_CTX_set_max_proto_version(dynamic_ctx, TLS1_3_VERSION);
-    SSL_CTX_set_cipher_list(dynamic_ctx, "HIGH:!aNULL:!MD5");
-
-
+    SSL_CTX_set_cipher_list(dynamic_ctx, "HIGH:!aNULL:!MD5:!RC4");
 
     if (!SSL_CTX_use_certificate_file(dynamic_ctx, cert_file, SSL_FILETYPE_PEM)) {
         perror("Failed to load certificate from file");
