@@ -22,6 +22,7 @@ static void initialize_openssl();
 static void cleanup_openssl();
 EVP_PKEY *load_private_key(const char *key_file);
 X509 *load_certificate(const char *cert_file);
+X509* generate_cert(const char* domain, EVP_PKEY* key, X509* ca_cert, EVP_PKEY* ca_key);
 int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const char *key_path);
 void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca_cert);
 
@@ -108,39 +109,50 @@ EVP_PKEY *generate_rsa_key() {
     return pkey;
 }
 
-// 인증서 생성
-X509 *generate_cert(const char *domain, EVP_PKEY *key, X509 *ca_cert) {
-    X509 *cert = X509_new();
+// 특정 도메인에 대한 인증서 생성성
+X509* generate_cert(const char* domain, EVP_PKEY* key, X509* ca_cert, EVP_PKEY* ca_key) {
+    // 새로운 X.509 인증서 구조체 할당
+    X509* cert = X509_new();
     if (!cert) handle_openssl_error();
 
+    // 인증서 버전 설정
     X509_set_version(cert, 2);
+    // 인증서 고유 일련 번호 설정
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 1);
 
+    // 인증서 유효기간 설정
     X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 365 * 24 * 60 * 60);
 
-    X509_NAME *name = X509_get_subject_name(cert);
-    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char *)domain, -1, -1, 0);
+    // 인증서 주체이름 설정
+    X509_NAME* name = X509_get_subject_name(cert);
+    // 주체 이름에 도메인 정보 추가
+    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char*)domain, -1, -1, 0);
+    // 인증서에 적용
     X509_set_subject_name(cert, name);
 
+    // 
     X509_EXTENSION *san = X509V3_EXT_conf_nid(NULL, NULL, NID_subject_alt_name, domain);
     if (san) {
         X509_add_ext(cert, san, -1);
         X509_EXTENSION_free(san);
     }
 
+    // 인증서 발급자(issuer) 이름 설정 --> 루트 CA 인증서 사용
     X509_set_issuer_name(cert, X509_get_subject_name(ca_cert));
+    
+    // 인증서에 사용할 공개 키 설정
     X509_set_pubkey(cert, key);
 
-    // Use `ca_key` to sign the certificate
-    if (!X509_sign(cert, key, EVP_sha256())) {
+    // 루트CA 개인키로 암호화하여 디지털 서명 생성
+    if (!X509_sign(cert, ca_key, EVP_sha256())) {
         X509_free(cert);
         handle_openssl_error();
     }
-
+    
+    // 
     return cert;
 }
-
 
 
 // 인증서 및 키 저장 함수
@@ -211,7 +223,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
         return;
     }
 
-    X509 *dynamic_cert = generate_cert(domain, key, ca_cert);
+    X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key);
     if (!dynamic_cert) {
         EVP_PKEY_free(key);
         perror("Failed to generate dynamic certificate");
