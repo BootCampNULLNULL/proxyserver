@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -13,17 +14,62 @@
 #include <errno.h>
 #include <netdb.h>
 #include <sys/types.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+// #include "http.h"
+// #include "ssl_conn.h"
+// #include "client_side.h"
+
 
 #define SERVERPORT 5051
 #define MAX_EVENTS 1000
+#define DEFUALT_HTTPS_PORT 443
+#define DEFUALT_HTTP_PORT 80
+#define CERT_FILE "/home/ubuntu/securezone/certificate.pem" // 인증서 파일 경로
+#define KEY_FILE  "/home/ubuntu/securezone/private_key.pem"  // 키 파일 경로
 
-static void set_nonblocking(int fd);
-static void log_exit(const char *fmt, ...);
-static void* xmalloc(size_t sz);
-static int get_IP(char* ip_str, const char* hostname, const char* service);
-static int connect_remote(const char* buf);
+#define MAX_REQUEST_BODY_LENGTH (1024 * 1024)
+#define MAX_LINE_SIZE 4096
+#define MAX_METHOD_SIZE 16
+#define MAX_URI_SIZE 2048
+#define MAX_PROTOCOL_SIZE 16
+#define MAX_HEADER_SIZE 8192
 
-typedef enum {
+
+//////////////////////////////////////
+typedef struct HTTPHeaderField {
+    char *name;
+    char *value;
+    struct HTTPHeaderField *next;
+} HTTPHeaderField;
+
+// HTTP 쿼리 파라미터를 나타내는 구조체
+typedef struct HTTPQueryParam {
+    char *name;
+    char *value;
+    struct HTTPQueryParam *next;
+} HTTPQueryParam;
+
+// HTTP 요청 데이터를 나타내는 구조체
+typedef struct HTTPRequest {
+    int protocol_minor_version;
+    char *method;
+    char *path;
+    int port;
+    char* host;
+    struct HTTPQueryParam *query;
+    struct HTTPHeaderField *header;
+    char *body;
+    long length;
+} HTTPRequest;
+/////////////////////////////////////
+
+typedef enum task_state_t {
     STATE_CLIENT_READ,
     STATE_REMOTE_CONNECT,
     STATE_REMOTE_WRITE,
@@ -31,18 +77,28 @@ typedef enum {
     STATE_CLIENT_WRITE
 } task_state_t;
 
-typedef struct {
+typedef struct task_t {
     int client_fd;
+    bool client_side_https;
+    SSL* client_ssl;
     int remote_fd;
+    SSL* remote_ssl;
+    bool remote_side_https;
     char buffer[1024];
     int buffer_len;
+    HTTPRequest* req;
     task_state_t state;
 } task_t;
 
-typedef struct {
-    char hostname[24];
-    char service[12];
-} request_line;
+
+static void set_nonblocking(int fd);
+static void log_exit(const char *fmt, ...);
+static void* xmalloc(size_t sz);
+static int get_IP(char* ip_str, const char* hostname, int port);
+static int connect_remote_http(const char* host, int port);
+SSL* connect_remote_https(int remote_fd);
+char* find_Host_field(HTTPHeaderField* head);
+int find_port(char* host);
 
 // Non-blocking 설정 함수
 void set_nonblocking(int fd) {
@@ -71,7 +127,7 @@ void* xmalloc(size_t sz)
     return p;
 }
 
-int get_IP(char* ip_str, const char* hostname, const char* service) {
+int get_IP(char* ip_str, const char* hostname, int port) {
     struct addrinfo hints, *res, *p;
     //char ip_str[INET6_ADDRSTRLEN];  // IPv6도 포함한 크기
 
@@ -80,8 +136,10 @@ int get_IP(char* ip_str, const char* hostname, const char* service) {
     hints.ai_family = AF_UNSPEC;       // IPv4 또는 IPv6 허용
     hints.ai_socktype = SOCK_STREAM;  // TCP 소켓
 
+    char s_port[6];
+    snprintf(s_port, sizeof(s_port), "%d", port);
     // getaddrinfo 호출
-    int status = getaddrinfo("localhost", service, &hints, &res);
+    int status = getaddrinfo(hostname, "80", &hints, &res);
     if (status != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         return 1;
@@ -115,22 +173,13 @@ int get_IP(char* ip_str, const char* hostname, const char* service) {
     return 0;
 }
 
-// 요청 라인 파싱
-int get_request_line(char* buf, char* hostname, char* service) {
-    
-    strcpy(hostname, "localhost");
-    strcpy(service, "http");
-    return 0;
-}
 
-int connect_remote(const char* buf) {
-    request_line* req = (request_line*)malloc(sizeof(request_line));
+int connect_remote_http(const char* host, int port) {
 
-    //
-    int req_status = get_request_line(buf, req->hostname, req->service);
-    char ip_str[INET_ADDRSTRLEN];
-    int addr_status = get_IP(ip_str, req->hostname, req->service);
+    char ip_str[INET_ADDRSTRLEN] = "93.184.215.14";
+    //int addr_status = get_IP(ip_str, host, port);
 
+    // remote 소켓 연결
     int remote_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(remote_fd < 0) {
         log_exit("Remote socket creation failed");
@@ -142,20 +191,531 @@ int connect_remote(const char* buf) {
     memset(&remoteaddr, 0, sizeof(remoteaddr));
     remoteaddr.sin_family = AF_INET;
     remoteaddr.sin_addr.s_addr = inet_addr(ip_str);
-
-    //url에 포트가 명시된 경우 명시된 포트로 접속
-    //명시되지 않을 경우 디폴트로 http->80, https->443 으로 접속
-    if(str4_cmp(req->service, 'h', 't', 't', 'p')) {
-        remoteaddr.sin_port = htons(8080);
-    }
+    remoteaddr.sin_port = htons(port);
 
     connect(remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr));
 
-    free(req);
     return remote_fd;
 }
 
+
+SSL* connect_remote_https(int remote_fd) {
+    // SSL 연결
+    SSL_CTX *remote_ctx = SSL_CTX_new(TLS_client_method());
+    if (!remote_ctx) {
+        perror("Failed to create SSL context for remote server");
+        close(remote_fd);
+        return NULL;
+    }
+    SSL *remote_ssl = SSL_new(remote_ctx);
+    SSL_set_fd(remote_ssl, remote_fd);
+
+    if (SSL_connect(remote_ssl) <= 0) {
+        fprintf(stderr, "SSL handshake with remote server failed\n");
+        ERR_print_errors_fp(stderr);
+        SSL_free(remote_ssl);
+        SSL_CTX_free(remote_ctx);
+        close(remote_fd);
+        return NULL;
+    }
+
+    return remote_ssl;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// 문자열의 공백을 제거하는 유틸리티 함수
+static char *trim_whitespace(char *str) {
+    char *end;
+
+    while (*str == ' ' || *str == '\t') str++;
+    if (*str == 0) return str;
+
+    end = str + strlen(str) - 1;
+    while (end > str && (*end == ' ' || *end == '\t' || *end == '\r')) end--;
+
+    *(end + 1) = '\0';
+    return str;
+}
+
+// 쿼리 파라미터를 파싱하는 함수
+static void parse_query_params(char *query_string, HTTPRequest *request) {
+    char *param = strtok(query_string, "&");
+    while (param) {
+        char *equal = strchr(param, '=');
+        if (!equal) {
+            fprintf(stderr, "잘못된 쿼리 파라미터: %s\n", param);
+            exit(EXIT_FAILURE);
+        }
+
+        *equal = '\0';
+        char *name = trim_whitespace(param);
+        char *value = trim_whitespace(equal + 1);
+
+        HTTPQueryParam *query_param = (HTTPQueryParam*)malloc(sizeof(HTTPQueryParam));
+        query_param->name = strdup(name);
+        query_param->value = strdup(value);
+        query_param->next = NULL;
+
+        if (!request->query) {
+            request->query = query_param;
+        } else {
+            HTTPQueryParam *current = request->query;
+            while (current->next) current = current->next;
+            current->next = query_param;
+        }
+
+        param = strtok(NULL, "&");
+    }
+}
+
+// 요청 라인을 파싱하는 함수
+static void read_request_line(const char *buffer, HTTPRequest *request) {
+    char *line = strdup(buffer);
+    char *method = strtok(line, " ");
+    char *path_with_query = strtok(NULL, " ");
+    char *version = strtok(NULL, " ");
+
+    if (!method || !path_with_query || !version) {
+        free(line);
+        fprintf(stderr, "잘못된 요청 라인\n");
+        exit(EXIT_FAILURE);
+    }
+
+    request->method = strdup(method);
+
+    // 쿼리 문자열 분리
+    char *query_start = strchr(path_with_query, '?');
+    if (query_start) {
+        *query_start = '\0';
+        request->path = strdup(path_with_query);
+        parse_query_params(query_start + 1, request);
+    } else {
+        request->path = strdup(path_with_query);
+    }
+
+    if (strncmp(version, "HTTP/1.", 7) == 0) {
+        request->protocol_minor_version = version[7] - '0';
+    } else {
+        fprintf(stderr, "지원되지 않는 HTTP 버전\n");
+        free(line);
+        exit(EXIT_FAILURE);
+    }
+
+    free(line);
+}
+
+// 헤더 필드를 파싱하는 함수
+static void read_header_field(const char *buffer, HTTPRequest *request) {
+    char *line = strdup(buffer);
+    char *colon = strchr(line, ':');
+
+    if (!colon) {
+        free(line);
+        fprintf(stderr, "잘못된 헤더 필드\n");
+        exit(EXIT_FAILURE);
+    }
+
+    *colon = '\0';
+    char *name = trim_whitespace(line);
+    char *value = trim_whitespace(colon + 1);
+
+    HTTPHeaderField *field = (HTTPHeaderField*)malloc(sizeof(HTTPHeaderField));
+    field->name = strdup(name);
+    field->value = strdup(value);
+    field->next = NULL;
+
+    if (!request->header) {
+        request->header = field;
+    } else {
+        HTTPHeaderField *current = request->header;
+        while (current->next) current = current->next;
+        current->next = field;
+    }
+
+    free(line);
+}
+
+// HTTP 요청 데이터를 파싱하는 메인 함수
+HTTPRequest *read_request(const char *buffer) {
+    HTTPRequest *request = (HTTPRequest*)calloc(1, sizeof(HTTPRequest));
+
+    const char *current = buffer;
+    char line[MAX_LINE_SIZE];
+
+    // 요청 라인 파싱
+    const char *line_end = strstr(current, "\r\n");
+    if (!line_end) {
+        fprintf(stderr, "잘못된 HTTP 요청\n");
+        exit(EXIT_FAILURE);
+    }
+    size_t line_length = line_end - current;
+    strncpy(line, current, line_length);
+    line[line_length] = '\0';
+    read_request_line(line, request);
+    current = line_end + 2;
+
+    // 헤더 파싱
+    while ((line_end = strstr(current, "\r\n")) && line_end != current) {
+        line_length = line_end - current;
+        strncpy(line, current, line_length);
+        line[line_length] = '\0';
+        read_header_field(line, request);
+        current = line_end + 2;
+    }
+
+    // Host 필드와 포트 설정
+    char* host = find_Host_field(request->header);
+    if (host) {
+        request->host = strdup(host);
+        request->port = find_port(host);
+        free(host);
+    } else {
+        request->host = NULL;
+        request->port = 0; // Host가 없을 경우
+    }
+
+    // 빈 줄을 건너뜀
+    if (line_end == current) {
+        current += 2;
+    }
+
+    // 본문(body)을 파싱
+    if (*current != '\0') {
+        request->body = strdup(current);
+        request->length = strlen(request->body);
+    }
+
+    return request;
+}
+
+char* find_Host_field(HTTPHeaderField* head) {
+    while (head) {
+        if (strcmp(head->name, "Host") == 0) {
+            return strdup(head->value);
+        }
+        head = head->next;
+    }
+    return NULL; // Host 필드가 없을 경우
+}
+
+// Host 값에서 포트를 추출하며, 호스트 문자열을 수정하는 함수
+int find_port(char* host) {
+    char* port_s = strstr(host, ":");
+    if (port_s) {
+        *port_s = '\0'; // ':'를 null로 바꿔 호스트와 포트를 분리
+        return atoi(port_s + 1); // ':' 뒤의 포트를 정수로 변환하여 반환
+    }
+    return -1;
+}
+
+// HTTPRequest 구조체를 해제하는 함수
+void free_request(HTTPRequest *request) {
+    if (request->method) free(request->method);
+    if (request->path) free(request->path);
+    if (request->host) free(request->host);
+
+    HTTPQueryParam *query = request->query;
+    while (query) {
+        HTTPQueryParam *next = query->next;
+        free(query->name);
+        free(query->value);
+        free(query);
+        query = next;
+    }
+
+    HTTPHeaderField *current = request->header;
+    while (current) {
+        HTTPHeaderField *next = current->next;
+        free(current->name);
+        free(current->value);
+        free(current);
+        current = next;
+    }
+
+    if (request->body) free(request->body);
+    free(request);
+}
+///////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////
+// OpenSSL 초기화
+void initialize_openssl() {
+    SSL_load_error_strings();
+    OpenSSL_add_ssl_algorithms();
+}
+
+// OpenSSL 정리
+void cleanup_openssl() {
+    EVP_cleanup();
+}
+
+void handle_openssl_error() {
+    ERR_print_errors_fp(stderr);
+    exit(EXIT_FAILURE);
+}
+
+// 키 및 인증서 로드
+EVP_PKEY *load_private_key(const char *key_file) {
+    FILE *fp = fopen(key_file, "r");
+    if (!fp) {
+        perror("Unable to open CA key file");
+        return NULL;
+    }
+    EVP_PKEY *key = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
+    fclose(fp);
+    return key;
+}
+
+X509 *load_certificate(const char *cert_file) {
+    FILE *fp = fopen(cert_file, "r");
+    if (!fp) {
+        perror("Unable to open CA cert file");
+        return NULL;
+    }
+    X509 *cert = PEM_read_X509(fp, NULL, NULL, NULL);
+    fclose(fp);
+    return cert;
+}
+
+// RSA 키 생성
+EVP_PKEY *generate_rsa_key() {
+    EVP_PKEY *pkey = EVP_PKEY_new();
+    if (!pkey) {
+        fprintf(stderr, "Failed to allocate EVP_PKEY\n");
+        handle_openssl_error();
+    }
+
+    RSA *rsa = RSA_new();
+    if (!rsa) {
+        fprintf(stderr, "Failed to create RSA object\n");
+        EVP_PKEY_free(pkey);
+        handle_openssl_error();
+    }
+
+    BIGNUM *bn = BN_new();
+    if (!bn || !BN_set_word(bn, RSA_F4)) {
+        fprintf(stderr, "Failed to set RSA_F4 exponent\n");
+        RSA_free(rsa);
+        EVP_PKEY_free(pkey);
+        BN_free(bn);
+        handle_openssl_error();
+    }
+
+    if (RSA_generate_key_ex(rsa, 2048, bn, NULL) <= 0) {
+        fprintf(stderr, "Failed to generate RSA key\n");
+        RSA_free(rsa);
+        EVP_PKEY_free(pkey);
+        BN_free(bn);
+        handle_openssl_error();
+    }
+
+    if (EVP_PKEY_assign_RSA(pkey, rsa) <= 0) {
+        fprintf(stderr, "Failed to assign RSA to EVP_PKEY\n");
+        RSA_free(rsa); // This frees `rsa` since EVP_PKEY_assign_RSA failed
+        EVP_PKEY_free(pkey);
+        BN_free(bn);
+        handle_openssl_error();
+    }
+
+    BN_free(bn);
+    return pkey;
+}
+
+// 특정 도메인에 대한 인증서 생성성
+X509* generate_cert(const char* domain, EVP_PKEY* key, X509* ca_cert, EVP_PKEY* ca_key) {
+    // 새로운 X.509 인증서 구조체 할당
+    X509* cert = X509_new();
+    if (!cert) handle_openssl_error();
+
+    // 인증서 버전 설정
+    X509_set_version(cert, 2);
+    // 인증서 고유 일련 번호 설정
+    ASN1_INTEGER_set(X509_get_serialNumber(cert), 1);
+
+    // 인증서 유효기간 설정
+    X509_gmtime_adj(X509_get_notBefore(cert), 0);
+    X509_gmtime_adj(X509_get_notAfter(cert), 365 * 24 * 60 * 60);
+
+    // 인증서 주체이름 설정
+    X509_NAME* name = X509_get_subject_name(cert);
+    // 주체 이름에 도메인 정보 추가
+    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char*)domain, -1, -1, 0);
+    // 인증서에 적용
+    X509_set_subject_name(cert, name);
+
+    // 
+    X509_EXTENSION *san = X509V3_EXT_conf_nid(NULL, NULL, NID_subject_alt_name, domain);
+    if (san) {
+        X509_add_ext(cert, san, -1);
+        X509_EXTENSION_free(san);
+    }
+
+    // 인증서 발급자(issuer) 이름 설정 --> 루트 CA 인증서 사용
+    X509_set_issuer_name(cert, X509_get_subject_name(ca_cert));
+    
+    // 인증서에 사용할 공개 키 설정
+    X509_set_pubkey(cert, key);
+
+    // 루트CA 개인키로 암호화하여 디지털 서명 생성
+    if (!X509_sign(cert, ca_key, EVP_sha256())) {
+        X509_free(cert);
+        handle_openssl_error();
+    }
+    
+    // 
+    return cert;
+}
+
+
+// 인증서 및 키 저장 함수
+int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const char *key_path) {
+    FILE *cert_file = fopen(cert_path, "wb");
+    if (!cert_file) {
+        perror("Failed to open certificate file");
+        return 0;
+    }
+
+    if (!PEM_write_X509(cert_file, cert)) {
+        perror("Failed to write certificate to file");
+        fclose(cert_file);
+        return 0;
+    }
+    fclose(cert_file);
+
+    FILE *key_file = fopen(key_path, "wb");
+    if (!key_file) {
+        perror("Failed to open private key file");
+        return 0;
+    }
+
+    if (!PEM_write_PrivateKey(key_file, key, NULL, NULL, 0, NULL, NULL)) {
+        perror("Failed to write private key to file");
+        fclose(key_file);
+        return 0;
+    }
+    fclose(key_file);
+
+    return 1;
+}
+
+SSL* handle_client_SSL_conn(int client_sock, 
+char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
+    
+    // 
+    const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
+    send(client_sock, response, strlen(response), 0);
+
+    // 동적 키 생성 및 인증서 생성
+    EVP_PKEY *key = generate_rsa_key();
+    if (!key) {
+        perror("Failed to generate RSA key");
+        close(client_sock);
+        return NULL;
+    }
+
+    X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key);
+    if (!dynamic_cert) {
+        EVP_PKEY_free(key);
+        perror("Failed to generate dynamic certificate");
+        close(client_sock);
+        return NULL;
+    }
+
+    const char *cert_file = "/home/ubuntu/securezone/dynamic_cert.pem";
+    const char *key_file = "/home/ubuntu/securezone/dynamic_key.pem";
+
+    if (!save_cert_and_key(dynamic_cert, key, cert_file, key_file)) {
+        EVP_PKEY_free(key);
+        X509_free(dynamic_cert);
+        close(client_sock);
+        return NULL;
+    }
+
+    // SSL 컨텍스트 생성
+    SSL_CTX *dynamic_ctx = SSL_CTX_new(TLS_server_method());
+    SSL_CTX_set_min_proto_version(dynamic_ctx, TLS1_2_VERSION);
+    SSL_CTX_set_max_proto_version(dynamic_ctx, TLS1_3_VERSION);
+    SSL_CTX_set_cipher_list(dynamic_ctx, "HIGH:!aNULL:!MD5:!RC4");
+
+    if (!SSL_CTX_use_certificate_file(dynamic_ctx, cert_file, SSL_FILETYPE_PEM)) {
+        perror("Failed to load certificate from file");
+        SSL_CTX_free(dynamic_ctx);
+        EVP_PKEY_free(key);
+        X509_free(dynamic_cert);
+        close(client_sock);
+        return NULL;
+    }
+
+    if (!SSL_CTX_use_PrivateKey_file(dynamic_ctx, key_file, SSL_FILETYPE_PEM)) {
+        perror("Failed to load private key from file");
+        SSL_CTX_free(dynamic_ctx);
+        EVP_PKEY_free(key);
+        X509_free(dynamic_cert);
+        close(client_sock);
+        return NULL;
+    }
+
+    SSL *ssl = SSL_new(dynamic_ctx);
+    SSL_set_fd(ssl, client_sock);
+
+    if (SSL_accept(ssl) <= 0) {
+        fprintf(stderr, "SSL handshake failed\n");
+        int err = SSL_get_error(ssl, -1);
+
+        switch (err) {
+            case SSL_ERROR_NONE:
+                printf("No error occurred.\n");
+                break;
+            case SSL_ERROR_ZERO_RETURN:
+                printf("Client closed the connection.\n");
+                break;
+            case SSL_ERROR_WANT_READ:
+                printf("SSL_accept needs more data (WANT_READ).\n");
+                break;
+            case SSL_ERROR_WANT_WRITE:
+                printf("SSL_accept needs to write more data (WANT_WRITE).\n");
+                break;
+            case SSL_ERROR_SYSCALL:
+                perror("System call error during SSL_accept");
+                break;
+            case SSL_ERROR_SSL:
+                printf("OpenSSL internal error occurred.\n");
+                ERR_print_errors_fp(stderr);
+                break;
+            default:
+                printf("Unknown error occurred: %d\n", err);
+                break;
+        }
+        SSL_free(ssl);
+        SSL_CTX_free(dynamic_ctx);
+        EVP_PKEY_free(key);
+        X509_free(dynamic_cert);
+        close(client_sock);
+        return NULL;
+    } 
+    return ssl;
+    // SSL_free(ssl);
+    // SSL_CTX_free(dynamic_ctx);
+    // EVP_PKEY_free(key);
+    // X509_free(dynamic_cert);
+    // close(client_sock);
+    
+}
+///////////////////////////////////////////////
+
 int main(void) {
+    const char *cert_file = CERT_FILE;
+    const char *key_file = KEY_FILE;
+
+    initialize_openssl();
+
+    EVP_PKEY *ca_key = load_private_key(key_file);
+    X509 *ca_cert = load_certificate(cert_file);
+    if (!ca_key || !ca_cert) {
+        fprintf(stderr, "Failed to load CA key or certificate\n");
+        exit(EXIT_FAILURE);
+    }
+
     int server_fd;
     struct sockaddr_in seraddr;
 
@@ -223,7 +783,11 @@ int main(void) {
                     task_t* task = (task_t*)malloc(sizeof(task_t));
                     
                     task->client_fd = client_fd;
+                    task->client_side_https = false;
+                    task->client_ssl = NULL;
                     task->remote_fd = -1;
+                    task->remote_ssl = NULL;
+                    task->remote_side_https = false;
                     task->buffer_len = 0;
                     task->state = STATE_CLIENT_READ;
 
@@ -238,45 +802,109 @@ int main(void) {
 
                 if (task->state == STATE_CLIENT_READ) {
                     // 클라이언트 데이터 수신
-                    while((task->buffer_len = recv(task->client_fd, task->buffer, sizeof(task->buffer), 0)) > 0) {
+                    memset(task->buffer, 0, 1024);
+                    while(1) {
+                        task->buffer_len = recv(task->client_fd, task->buffer, 1024, 0);
+                        if(task->buffer_len < 0) {
+                            if(errno == EAGAIN || errno == EWOULDBLOCK) {
+                                break;
+                            } else {
+                                perror("recv failed");
+                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                close(task->client_fd);
+                                if(task->remote_fd != -1) close(task->remote_fd);
+                                free(task);
+                                exit(1);
+                            }
+                        } else if (task->buffer_len == 0) {
+                            printf("Client disconnected\n");
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                            close(task->client_fd);
+                            if(task->remote_fd != -1) close(task->remote_fd);
+                            free(task);
+                            exit(1);
+                        }
+                    }
+                    // http 요청 로깅
+                    printf("Data received from client: %d bytes\n", task->buffer_len);
+                    printf("%s\n", task->buffer);
+
+                    // http 요청 파싱
+                    task->req = read_request(task->buffer);
+                    
+                    // url db 조회 -> 필터링 
+                    // CONNECT => ssl connect => GET or POST 요청 recv
+                    if(strcmp(task->req->method, "CONNECT") == 0) {
+                        task->client_side_https = true;
+                        task->remote_side_https = true;
+                        if(task->req->port == -1) {
+                            task->req->port = DEFUALT_HTTPS_PORT;
+                        }
+                        printf("Host: %s\n", task->req->host); // 호스트 이름 출력
+                        printf("Port: %d\n", task->req->port); // 포트 출력
+                        printf("CONNECT request for %s:%d\n", task->req->host, task->req->port);
                         
-                        printf("Data received from client: %d bytes\n", task->buffer_len);
-                        printf("%s\n", task->buffer);
+                        // client ssl 연결
+                        task->client_ssl = handle_client_SSL_conn(task->client_fd, task->req->host, task->req->port, ca_key, ca_cert);
+                        task->buffer_len = SSL_read(task->client_ssl, task->buffer, sizeof(task->buffer) -1);
 
-                        // 원격 서버 연결
-                        task->remote_fd = connect_remote(task->buffer);
-
-                        ev.events = EPOLLOUT | EPOLLET;
-                        ev.data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유
-                        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, &ev);
-
-                        task->state = STATE_REMOTE_WRITE;
+                        // remote ssl 연결
+                        task->remote_fd = connect_remote_http(task->req->host, task->req->port);
+                        task->remote_ssl = connect_remote_https(task->remote_fd);
+                        printf("remote connection success\n");
+                    } else {
+                        if(task->req->port == -1) {
+                            task->req->port = DEFUALT_HTTP_PORT;
+                        }
+                        // remote 연결
+                        task->remote_fd = connect_remote_http(task->req->host, task->req->port);
+                        printf("remote connection success\n");
                     }
 
-                    if(task->buffer_len == 0 || (task->buffer_len == -1 && errno != EAGAIN)) {
-                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                        close(task->client_fd);
-                        if(task->remote_fd != -1) close(task->remote_fd);
-                        free(task);
-                    }
+                    ev.events = EPOLLOUT | EPOLLET;
+                    ev.data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유 
+                    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, &ev);
+
+                    task->state = STATE_REMOTE_WRITE;
+                    // free(req);  
+                    
                 } else if (task->state == STATE_REMOTE_WRITE) {
                     // 원격 서버로 데이터 송신
-                    send(task->remote_fd, task->buffer, 129, 0);
-                    task->state = STATE_REMOTE_READ;
-                    ev.events = EPOLLIN | EPOLLET;
-                    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
+                    if (task->remote_side_https == true) {
+                        SSL_write(task->remote_ssl, task->buffer, sizeof(task->buffer));
+                        task->state = STATE_REMOTE_READ;
+                        ev.events = EPOLLIN | EPOLLET;
+                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
+                    } else {
+                        send(task->remote_fd, task->buffer, 1024, 0);
+                        task->state = STATE_REMOTE_READ;
+                        ev.events = EPOLLIN | EPOLLET;
+                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
+                    }
+                    
                 } else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
-                    while ((task->buffer_len = recv(task->remote_fd, task->buffer, sizeof(task->buffer), 0)) > 0) {
+                    if(task->remote_side_https == true) {
+                        //SSL_read()
+                        task->buffer_len = SSL_read(task->remote_ssl, task->buffer, sizeof(task->buffer) -1);
                         printf("Data received from remote: %d bytes\n", task->buffer_len);
                         printf("%s\n", task->buffer);
 
                         task->state = STATE_CLIENT_WRITE;
                         ev.events = EPOLLOUT | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
-                    }
+                    } else {
+                        memset(task->buffer, 0, 1024);
+                        while ((task->buffer_len = recv(task->remote_fd, task->buffer, 1024, 0)) > 0) {
+                            printf("Data received from remote: %d bytes\n", task->buffer_len);
+                            printf("%s\n", task->buffer);
 
+                            task->state = STATE_CLIENT_WRITE;
+                            ev.events = EPOLLOUT | EPOLLET;
+                            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        }
+                    }
                     // 연결 종료 처리
                     if (task->buffer_len == 0) {
                         printf("Remote connection closed\n");
@@ -292,21 +920,26 @@ int main(void) {
                         free(task);
                     }
                 } else if (task->state == STATE_CLIENT_WRITE) {
-                    send(task->client_fd, task->buffer, task->buffer_len, 0);
-                    task->state = STATE_CLIENT_READ;
-                    ev.events = EPOLLIN | EPOLLET;
-                    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                    if(task->client_side_https = true) {
+                        // SSL_write()
+                        SSL_write(task->client_ssl, task->buffer, task->buffer_len);
+                        task->state = STATE_CLIENT_READ;
+                        ev.events = EPOLLIN | EPOLLET;
+                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                    } else {
+                        send(task->client_fd, task->buffer, task->buffer_len, 0);
+                        task->state = STATE_CLIENT_READ;
+                        ev.events = EPOLLIN | EPOLLET;
+                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                    }
+                    free_request(task->req);
+                    SSL_free(task->client_ssl);
                 }
             }
         }
     }
-
     close(server_fd);
     close(epoll_fd);
+    
     return 0;
 }
-
-// 문제점 1. 긴 요청/응답 처리를 위한 버퍼 크기 고려X
-// 문제점 2. HTTP 요청/응답 데이터에 대한 유효성 고려X
-// 문제점 3. 실제 대상서버로 접속하는 로직 X
-// 문제점 4. getaddrinfo() - 여러 IP를 반환하는 도메인은 어떤 IP를 선택해서 connect 할건지?

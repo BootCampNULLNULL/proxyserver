@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <sys/types.h>
@@ -13,18 +14,7 @@
 #include <openssl/rsa.h>
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
-
-#define BUFFER_SIZE 4096 // 버퍼 크기 정의
-#define CERT_FILE "/home/ubuntu/securezone/certificate.pem" // 인증서 파일 경로
-#define KEY_FILE  "/home/ubuntu/securezone/private_key.pem"  // 키 파일 경로
-
-static void initialize_openssl();
-static void cleanup_openssl();
-EVP_PKEY *load_private_key(const char *key_file);
-X509 *load_certificate(const char *cert_file);
-X509* generate_cert(const char* domain, EVP_PKEY* key, X509* ca_cert, EVP_PKEY* ca_key);
-int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const char *key_path);
-void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca_cert);
+#include "ssl_conn.h"
 
 // OpenSSL 초기화
 void initialize_openssl() {
@@ -187,31 +177,10 @@ int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const ch
 }
 
 // 클라이언트 요청 처리 (수정)
-void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca_cert) {
-    char buffer[BUFFER_SIZE];
-    int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
-    if (bytes > 0) {
-        buffer[bytes] = '\0';  // Ensure null-terminated string
-        printf("Received data: %s\n", buffer);
-    } else if (bytes == 0) {
-        printf("Connection closed by client.\n");
-        return;
-    } else {
-        perror("recv failed");
-        return;
-    }
-
-    char domain[256] = {0};
-    int port;
-
-    if (sscanf(buffer, "CONNECT %255[^:]:%d", domain, &port) != 2) {
-        perror("Invalid CONNECT request");
-        close(client_sock);
-        return;
-    }
-
-    printf("CONNECT request for %s:%d\n", domain, port);
-
+SSL* handle_client_SSL_conn(int client_sock, 
+char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
+    
+    // 
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     send(client_sock, response, strlen(response), 0);
 
@@ -220,7 +189,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
     if (!key) {
         perror("Failed to generate RSA key");
         close(client_sock);
-        return;
+        return NULL;
     }
 
     X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key);
@@ -228,7 +197,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
         EVP_PKEY_free(key);
         perror("Failed to generate dynamic certificate");
         close(client_sock);
-        return;
+        return NULL;
     }
 
     const char *cert_file = "/home/ubuntu/securezone/dynamic_cert.pem";
@@ -238,7 +207,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
-        return;
+        return NULL;
     }
 
     // SSL 컨텍스트 생성
@@ -253,7 +222,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
-        return;
+        return NULL;
     }
 
     if (!SSL_CTX_use_PrivateKey_file(dynamic_ctx, key_file, SSL_FILETYPE_PEM)) {
@@ -262,7 +231,7 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
-        return;
+        return NULL;
     }
 
     SSL *ssl = SSL_new(dynamic_ctx);
@@ -301,74 +270,72 @@ void handle_client_with_dynamic_cert(int client_sock, EVP_PKEY *ca_key, X509 *ca
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
-        return;
-    } else {
-        printf("TLS handshake completed with client for domain %s\n", domain);
-    }
-
-    SSL_free(ssl);
-    SSL_CTX_free(dynamic_ctx);
-    EVP_PKEY_free(key);
-    X509_free(dynamic_cert);
-    close(client_sock);
+        return NULL;
+    } 
+    return ssl;
+    // SSL_free(ssl);
+    // SSL_CTX_free(dynamic_ctx);
+    // EVP_PKEY_free(key);
+    // X509_free(dynamic_cert);
+    // close(client_sock);
 }
 
 
-int main() {
+// int main() {
 
-    const char *cert_file = CERT_FILE;
-    const char *key_file = KEY_FILE;
+//     const char *cert_file = CERT_FILE;
+//     const char *key_file = KEY_FILE;
 
-    initialize_openssl();
+//     initialize_openssl();
 
-    EVP_PKEY *ca_key = load_private_key(key_file);
-    X509 *ca_cert = load_certificate(cert_file);
-    if (!ca_key || !ca_cert) {
-        fprintf(stderr, "Failed to load CA key or certificate\n");
-        exit(EXIT_FAILURE);
-    }
+//     EVP_PKEY *ca_key = load_private_key(key_file);
+//     X509 *ca_cert = load_certificate(cert_file);
+//     if (!ca_key || !ca_cert) {
+//         fprintf(stderr, "Failed to load CA key or certificate\n");
+//         exit(EXIT_FAILURE);
+//     }
 
-    int server_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_sock < 0) {
-        perror("Unable to create socket");
-        exit(EXIT_FAILURE);
-    }
+//     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+//     if (server_sock < 0) {
+//         perror("Unable to create socket");
+//         exit(EXIT_FAILURE);
+//     }
 
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(5052);
-    addr.sin_addr.s_addr = INADDR_ANY;
+//     struct sockaddr_in addr;
+//     addr.sin_family = AF_INET;
+//     addr.sin_port = htons(5052);
+//     addr.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(server_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        perror("Unable to bind");
-        close(server_sock);
-        exit(EXIT_FAILURE);
-    }
+//     if (bind(server_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+//         perror("Unable to bind");
+//         close(server_sock);
+//         exit(EXIT_FAILURE);
+//     }
 
-    if (listen(server_sock, 10) < 0) {
-        perror("Unable to listen");
-        close(server_sock);
-        exit(EXIT_FAILURE);
-    }
+//     if (listen(server_sock, 10) < 0) {
+//         perror("Unable to listen");
+//         close(server_sock);
+//         exit(EXIT_FAILURE);
+//     }
 
-    printf("Listening on port 5052...\n");
+//     printf("Listening on port 5052...\n");
 
-    while (1) {
-        struct sockaddr_in client_addr;
-        socklen_t client_len = sizeof(client_addr);
-        int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len);
-        if (client_sock < 0) {
-            perror("Unable to accept");
-            continue;
-        }
+//     while (1) {
+//         struct sockaddr_in client_addr;
+//         socklen_t client_len = sizeof(client_addr);
+//         int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len);
+//         if (client_sock < 0) {
+//             perror("Unable to accept");
+//             continue;
+//         }
 
-        handle_client_with_dynamic_cert(client_sock, ca_key, ca_cert);
-    }
+//         handle_client_with_dynamic_cert(client_sock, ca_key, ca_cert);
+//     }
 
-    close(server_sock);
-    EVP_PKEY_free(ca_key);
-    X509_free(ca_cert);
-    cleanup_openssl();
+//     close(server_sock);
+//     EVP_PKEY_free(ca_key);
+//     X509_free(ca_cert);
+//     cleanup_openssl();
 
-    return 0;
-}
+//     return 0;
+// }

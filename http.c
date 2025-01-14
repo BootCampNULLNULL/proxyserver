@@ -11,83 +11,263 @@
 #include <errno.h>
 #include <netdb.h>
 #include <sys/types.h>
+#include "http.h"
 
-#define MAX_REQUEST_BODY_LENGTH (1024 * 1024)
-#define protocol_minor_version
-#define LINE_BUF_SIZE 4096
 
-#define str3_cmp(m, c0, c1, c2) m[0] == c0 && m[1] == c1 && m[2] == c2
-#define str4_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3
-#define str7_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3 && m[4] == c4 && m[5] == c5 && m[6] == c6
+// 문자열의 공백을 제거하는 유틸리티 함수
+char *trim_whitespace(char *str) {
+    char *end;
 
-#define MAX_METHOD_SIZE 16
-#define MAX_URI_SIZE 2048
-#define MAX_PROTOCOL_SIZE 16
-#define MAX_HEADER_SIZE 8192
+    while (*str == ' ' || *str == '\t') str++;
+    if (*str == 0) return str;
 
-typedef struct {
-    char method[MAX_METHOD_SIZE];
-    char uri[MAX_URI_SIZE];
-    char protocol[MAX_PROTOCOL_SIZE];
-    char headers[MAX_HEADER_SIZE];
-} HttpRequest;
+    end = str + strlen(str) - 1;
+    while (end > str && (*end == ' ' || *end == '\t' || *end == '\r')) end--;
 
-// HTTP 요청 파싱 함수
-int parse_http_request(char *request, HttpRequest *http_request) {
-    if (!request || !http_request) return -1;
+    *(end + 1) = '\0';
+    return str;
+}
 
-    char *line = request;
-
-    // 요청 라인 파싱
-    char *newline = strstr(line, "\r\n");
-    if (!newline) return -1;
-
-    *newline = '\0'; // 요청 라인의 끝에 NULL 삽입
-    if (sscanf(line, "%15s %2047s %15s", http_request->method, http_request->uri, http_request->protocol) != 3) {
-        return -1;
-    }
-
-    // 헤더 파싱
-    line = newline + 2; // 헤더 시작 위치로 이동
-    http_request->headers[0] = '\0'; // 초기화
-    while ((newline = strstr(line, "\r\n")) != NULL) {
-        if (newline == line) { // 빈 줄 (헤더 끝)
-            break;
+// 쿼리 파라미터를 파싱하는 함수
+void parse_query_params(char *query_string, HTTPRequest *request) {
+    char *param = strtok(query_string, "&");
+    while (param) {
+        char *equal = strchr(param, '=');
+        if (!equal) {
+            fprintf(stderr, "잘못된 쿼리 파라미터: %s\n", param);
+            exit(EXIT_FAILURE);
         }
 
-        *newline = '\0'; // 현재 헤더 라인 끝에 NULL 삽입
-        strncat(http_request->headers, line, MAX_HEADER_SIZE - strlen(http_request->headers) - 1);
-        strncat(http_request->headers, "\n", MAX_HEADER_SIZE - strlen(http_request->headers) - 1);
+        *equal = '\0';
+        char *name = trim_whitespace(param);
+        char *value = trim_whitespace(equal + 1);
 
-        line = newline + 2; // 다음 라인으로 이동
+        HTTPQueryParam *query_param = (HTTPQueryParam*)malloc(sizeof(HTTPQueryParam));
+        query_param->name = strdup(name);
+        query_param->value = strdup(value);
+        query_param->next = NULL;
+
+        if (!request->query) {
+            request->query = query_param;
+        } else {
+            HTTPQueryParam *current = request->query;
+            while (current->next) current = current->next;
+            current->next = query_param;
+        }
+
+        param = strtok(NULL, "&");
+    }
+}
+
+// 요청 라인을 파싱하는 함수
+void read_request_line(const char *buffer, HTTPRequest *request) {
+    char *line = strdup(buffer);
+    char *method = strtok(line, " ");
+    char *path_with_query = strtok(NULL, " ");
+    char *version = strtok(NULL, " ");
+
+    if (!method || !path_with_query || !version) {
+        free(line);
+        fprintf(stderr, "잘못된 요청 라인\n");
+        exit(EXIT_FAILURE);
     }
 
-    return 0;
-}
+    request->method = strdup(method);
 
-// 디버깅 및 출력용
-void print_http_request(const HttpRequest *http_request) {
-    printf("Method: %s\n", http_request->method);
-    printf("URI: %s\n", http_request->uri);
-    printf("Protocol: %s\n", http_request->protocol);
-    printf("Headers:\n%s\n", http_request->headers);
-}
-
-// 테스트 코드
-int main() {
-    char raw_request[] =
-        "GET /index.html HTTP/1.1\r\n"
-        "Host: www.example.com\r\n"
-        "User-Agent: curl/7.68.0\r\n"
-        "Accept: */*\r\n"
-        "\r\n";
-
-    HttpRequest http_request;
-    if (parse_http_request(raw_request, &http_request) == 0) {
-        print_http_request(&http_request);
+    // 쿼리 문자열 분리
+    char *query_start = strchr(path_with_query, '?');
+    if (query_start) {
+        *query_start = '\0';
+        request->path = strdup(path_with_query);
+        parse_query_params(query_start + 1, request);
     } else {
-        printf("Failed to parse HTTP request.\n");
+        request->path = strdup(path_with_query);
     }
 
-    return 0;
+    if (strncmp(version, "HTTP/1.", 7) == 0) {
+        request->protocol_minor_version = version[7] - '0';
+    } else {
+        fprintf(stderr, "지원되지 않는 HTTP 버전\n");
+        free(line);
+        exit(EXIT_FAILURE);
+    }
+
+    free(line);
 }
+
+// 헤더 필드를 파싱하는 함수
+void read_header_field(const char *buffer, HTTPRequest *request) {
+    char *line = strdup(buffer);
+    char *colon = strchr(line, ':');
+
+    if (!colon) {
+        free(line);
+        fprintf(stderr, "잘못된 헤더 필드\n");
+        exit(EXIT_FAILURE);
+    }
+
+    *colon = '\0';
+    char *name = trim_whitespace(line);
+    char *value = trim_whitespace(colon + 1);
+
+    HTTPHeaderField *field = (HTTPHeaderField*)malloc(sizeof(HTTPHeaderField));
+    field->name = strdup(name);
+    field->value = strdup(value);
+    field->next = NULL;
+
+    if (!request->header) {
+        request->header = field;
+    } else {
+        HTTPHeaderField *current = request->header;
+        while (current->next) current = current->next;
+        current->next = field;
+    }
+
+    free(line);
+}
+
+// HTTP 요청 데이터를 파싱하는 메인 함수
+HTTPRequest *read_request(const char *buffer) {
+    HTTPRequest *request = (HTTPRequest*)calloc(1, sizeof(HTTPRequest));
+
+    const char *current = buffer;
+    char line[MAX_LINE_SIZE];
+
+    // 요청 라인 파싱
+    const char *line_end = strstr(current, "\r\n");
+    if (!line_end) {
+        fprintf(stderr, "잘못된 HTTP 요청\n");
+        exit(EXIT_FAILURE);
+    }
+    size_t line_length = line_end - current;
+    strncpy(line, current, line_length);
+    line[line_length] = '\0';
+    read_request_line(line, request);
+    current = line_end + 2;
+
+    // 헤더 파싱
+    while ((line_end = strstr(current, "\r\n")) && line_end != current) {
+        line_length = line_end - current;
+        strncpy(line, current, line_length);
+        line[line_length] = '\0';
+        read_header_field(line, request);
+        current = line_end + 2;
+    }
+
+    // Host 필드와 포트 설정
+    char* host = find_Host_field(request->header);
+    if (host) {
+        request->host = strdup(host);
+        request->port = find_port(host);
+        free(host);
+    } else {
+        request->host = NULL;
+        request->port = 0; // Host가 없을 경우
+    }
+
+    // 빈 줄을 건너뜀
+    if (line_end == current) {
+        current += 2;
+    }
+
+    // 본문(body)을 파싱
+    if (*current != '\0') {
+        request->body = strdup(current);
+        request->length = strlen(request->body);
+    }
+
+    return request;
+}
+
+char* find_Host_field(HTTPHeaderField* head) {
+    while (head) {
+        if (strcmp(head->name, "Host") == 0) {
+            return strdup(head->value);
+        }
+        head = head->next;
+    }
+    return NULL; // Host 필드가 없을 경우
+}
+
+// Host 값에서 포트를 추출하며, 호스트 문자열을 수정하는 함수
+int find_port(char* host) {
+    char* port_s = strstr(host, ":");
+    if (port_s) {
+        *port_s = '\0'; // ':'를 null로 바꿔 호스트와 포트를 분리
+        return atoi(port_s + 1); // ':' 뒤의 포트를 정수로 변환하여 반환
+    }
+    return -1;
+}
+
+// HTTPRequest 구조체를 해제하는 함수
+void free_request(HTTPRequest *request) {
+    if (request->method) free(request->method);
+    if (request->path) free(request->path);
+    if (request->host) free(request->host);
+
+    HTTPQueryParam *query = request->query;
+    while (query) {
+        HTTPQueryParam *next = query->next;
+        free(query->name);
+        free(query->value);
+        free(query);
+        query = next;
+    }
+
+    HTTPHeaderField *current = request->header;
+    while (current) {
+        HTTPHeaderField *next = current->next;
+        free(current->name);
+        free(current->value);
+        free(current);
+        current = next;
+    }
+
+    if (request->body) free(request->body);
+    free(request);
+}
+
+// int main() {
+//     char raw_request[] =
+//         "GET /index.html?name=test&age=25 HTTP/1.1\r\n"
+//         "Host: www.example.com:443\r\n"
+//         "User-Agent: curl/7.68.0\r\n"
+//         "Accept: */*\r\n"
+//         "\r\n";
+
+//     HTTPRequest* req = read_request(raw_request);
+
+//     // 요청 라인 출력
+//     printf("Method: %s\n", req->method);
+//     printf("Path: %s\n", req->path);
+//     printf("HTTP Version: 1.%d\n", req->protocol_minor_version);
+
+//     // 쿼리 파라미터 출력
+//     HTTPQueryParam *query = req->query;
+//     printf("Query Parameters:\n");
+//     while (query) {
+//         printf("  %s: %s\n", query->name, query->value);
+//         query = query->next;
+//     }
+
+//     // 헤더 출력
+//     HTTPHeaderField *header = req->header;
+//     printf("Headers:\n");
+//     while (header) {
+//         printf("  %s: %s\n", header->name, header->value);
+//         header = header->next;
+//     }
+
+//     // Host 필드 값 추출
+//     if (req->host) {
+//         printf("Host: %s\n", req->host); // 호스트 이름 출력
+//         printf("Port: %d\n", req->port); // 포트 출력
+//     } else {
+//         printf("Host 필드가 없습니다.\n");
+//     }
+
+//     // 메모리 해제
+//     free_request(req);
+
+//     return 0;
+// }
