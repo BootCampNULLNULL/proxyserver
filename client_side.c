@@ -32,6 +32,7 @@
 #define DEFUALT_HTTP_PORT 80
 #define CERT_FILE "/home/ubuntu/securezone/certificate.pem" // 인증서 파일 경로
 #define KEY_FILE  "/home/ubuntu/securezone/private_key.pem"  // 키 파일 경로
+#define MAX_BUFFER_SIZE 4096
 
 #define MAX_REQUEST_BODY_LENGTH (1024 * 1024)
 #define MAX_LINE_SIZE 4096
@@ -84,7 +85,7 @@ typedef struct task_t {
     int remote_fd;
     SSL* remote_ssl;
     bool remote_side_https;
-    char buffer[1024];
+    char buffer[MAX_BUFFER_SIZE];
     int buffer_len;
     HTTPRequest* req;
     task_state_t state;
@@ -802,9 +803,9 @@ int main(void) {
 
                 if (task->state == STATE_CLIENT_READ) {
                     // 클라이언트 데이터 수신
-                    memset(task->buffer, 0, 1024);
+                    memset(task->buffer, 0, MAX_BUFFER_SIZE);
                     while(1) {
-                        task->buffer_len = recv(task->client_fd, task->buffer, 1024, 0);
+                        task->buffer_len = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, 0);
                         if(task->buffer_len < 0) {
                             if(errno == EAGAIN || errno == EWOULDBLOCK) {
                                 break;
@@ -876,7 +877,7 @@ int main(void) {
                         ev.events = EPOLLIN | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
                     } else {
-                        send(task->remote_fd, task->buffer, 1024, 0);
+                        send(task->remote_fd, task->buffer, MAX_BUFFER_SIZE, 0);
                         task->state = STATE_REMOTE_READ;
                         ev.events = EPOLLIN | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
@@ -895,15 +896,37 @@ int main(void) {
                         ev.events = EPOLLOUT | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                     } else {
-                        memset(task->buffer, 0, 1024);
-                        while ((task->buffer_len = recv(task->remote_fd, task->buffer, 1024, 0)) > 0) {
-                            printf("Data received from remote: %d bytes\n", task->buffer_len);
-                            printf("%s\n", task->buffer);
-
-                            task->state = STATE_CLIENT_WRITE;
-                            ev.events = EPOLLOUT | EPOLLET;
-                            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        memset(task->buffer, 0, MAX_BUFFER_SIZE);
+                        while (1) {
+                            task->buffer_len = recv(task->remote_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+                            if(task->buffer_len < 0) {
+                                if (errno ==EAGAIN || errno == EWOULDBLOCK) {
+                                    break;
+                                } else {
+                                    perror("recv failed");
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                    close(task->client_fd);
+                                    close(task->remote_fd);
+                                    free(task);
+                                    exit(1);
+                                }
+                            } else if (task->buffer_len == 0) {
+                                printf("client disconnected\n");
+                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                close(task->client_fd);
+                                close(task->remote_fd);
+                                free(task);
+                                exit(1);
+                            }
                         }
+                        printf("Data received from remote: %d bytes\n", task->buffer_len);
+                        printf("%s\n", task->buffer);
+
+                        task->state = STATE_CLIENT_WRITE;
+                        ev.events = EPOLLOUT | EPOLLET;
+                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                     }
                     // 연결 종료 처리
                     if (task->buffer_len == 0) {
@@ -920,7 +943,7 @@ int main(void) {
                         free(task);
                     }
                 } else if (task->state == STATE_CLIENT_WRITE) {
-                    if(task->client_side_https = true) {
+                    if(task->client_side_https == true) {
                         // SSL_write()
                         SSL_write(task->client_ssl, task->buffer, task->buffer_len);
                         task->state = STATE_CLIENT_READ;
@@ -928,9 +951,19 @@ int main(void) {
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                     } else {
                         send(task->client_fd, task->buffer, task->buffer_len, 0);
-                        task->state = STATE_CLIENT_READ;
-                        ev.events = EPOLLIN | EPOLLET;
-                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        // // 세션 유지시
+                        // task->state = STATE_CLIENT_READ;
+                        // ev.events = EPOLLIN | EPOLLET;
+                        // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        // free(task->req);
+
+                        // 세션 종료시
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                        close(task->remote_fd);
+                        close(task->client_fd);
+                        free_request(task->req);
+                        free(task);
                     }
                     free_request(task->req);
                     SSL_free(task->client_ssl);
@@ -943,3 +976,7 @@ int main(void) {
     
     return 0;
 }
+
+// 문제점 0. HTTPS 통신 테스트 필요
+// 문제점 1. STATE_CLIENT_WRITE 상태에서 클라이언트로 최종 수신 종료 이후 세션 유지 or 종료
+// 문제점 2. ssl 객체들 free
