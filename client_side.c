@@ -965,8 +965,6 @@ int main(void) {
                         free_request(task->req);
                         free(task);
                     }
-                    free_request(task->req);
-                    SSL_free(task->client_ssl);
                 }
             }
         }
