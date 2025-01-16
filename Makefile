@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -g
 LDFLAGS = -lssl -lcrypto
 TARGET = test_proxy
-SRC = client_side.c ssl_conn.c http.c
+SRC = client_side.c http.c ssl_conn.c
 OBJ = $(SRC:.c=.o)
 
 all: $(TARGET)
