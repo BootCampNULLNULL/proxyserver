@@ -1,12 +1,17 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
-#include <netdb.h>
 #include <arpa/inet.h>
-#include <sys/select.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/x509.h>
@@ -16,7 +21,6 @@
 #include <openssl/evp.h>
 #include "ssl_conn.h"
 
-// OpenSSL 초기화
 void initialize_openssl() {
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
@@ -176,11 +180,9 @@ int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const ch
     return 1;
 }
 
-// 클라이언트 요청 처리 (수정)
 SSL* handle_client_SSL_conn(int client_sock, 
-char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
-    
-    // 
+char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
+    //
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     send(client_sock, response, strlen(response), 0);
 
@@ -199,7 +201,7 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
         close(client_sock);
         return NULL;
     }
-
+    
     const char *cert_file = "/home/ubuntu/securezone/dynamic_cert.pem";
     const char *key_file = "/home/ubuntu/securezone/dynamic_key.pem";
 
@@ -211,131 +213,76 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
     }
 
     // SSL 컨텍스트 생성
-    SSL_CTX *dynamic_ctx = SSL_CTX_new(TLS_server_method());
-    SSL_CTX_set_min_proto_version(dynamic_ctx, TLS1_2_VERSION);
-    SSL_CTX_set_max_proto_version(dynamic_ctx, TLS1_3_VERSION);
-    SSL_CTX_set_cipher_list(dynamic_ctx, "HIGH:!aNULL:!MD5:!RC4");
+    client_ctx = SSL_CTX_new(TLS_server_method());
+    SSL_CTX_set_min_proto_version(client_ctx, TLS1_2_VERSION);
+    SSL_CTX_set_max_proto_version(client_ctx, TLS1_3_VERSION);
+    SSL_CTX_set_cipher_list(client_ctx, "HIGH:!aNULL:!MD5:!RC4");
 
-    if (!SSL_CTX_use_certificate_file(dynamic_ctx, cert_file, SSL_FILETYPE_PEM)) {
+    if (!SSL_CTX_use_certificate_file(client_ctx, cert_file, SSL_FILETYPE_PEM)) {
         perror("Failed to load certificate from file");
-        SSL_CTX_free(dynamic_ctx);
+        SSL_CTX_free(client_ctx);
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
         return NULL;
     }
 
-    if (!SSL_CTX_use_PrivateKey_file(dynamic_ctx, key_file, SSL_FILETYPE_PEM)) {
+    if (!SSL_CTX_use_PrivateKey_file(client_ctx, key_file, SSL_FILETYPE_PEM)) {
         perror("Failed to load private key from file");
-        SSL_CTX_free(dynamic_ctx);
+        SSL_CTX_free(client_ctx);
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
         return NULL;
     }
 
-    SSL *ssl = SSL_new(dynamic_ctx);
+    SSL *ssl = SSL_new(client_ctx);
     SSL_set_fd(ssl, client_sock);
 
-    if (SSL_accept(ssl) <= 0) {
-        fprintf(stderr, "SSL handshake failed\n");
-        int err = SSL_get_error(ssl, -1);
+    // if (SSL_accept(ssl) <= 0) {
+    //     fprintf(stderr, "SSL handshake failed\n");
+    //     int err = SSL_get_error(ssl, -1);
 
-        switch (err) {
-            case SSL_ERROR_NONE:
-                printf("No error occurred.\n");
-                break;
-            case SSL_ERROR_ZERO_RETURN:
-                printf("Client closed the connection.\n");
-                break;
-            case SSL_ERROR_WANT_READ:
-                printf("SSL_accept needs more data (WANT_READ).\n");
-                break;
-            case SSL_ERROR_WANT_WRITE:
-                printf("SSL_accept needs to write more data (WANT_WRITE).\n");
-                break;
-            case SSL_ERROR_SYSCALL:
-                perror("System call error during SSL_accept");
-                break;
-            case SSL_ERROR_SSL:
-                printf("OpenSSL internal error occurred.\n");
-                ERR_print_errors_fp(stderr);
-                break;
-            default:
-                printf("Unknown error occurred: %d\n", err);
-                break;
-        }
-        SSL_free(ssl);
-        SSL_CTX_free(dynamic_ctx);
-        EVP_PKEY_free(key);
-        X509_free(dynamic_cert);
-        close(client_sock);
-        return NULL;
-    } 
+    //     switch (err) {
+    //         case SSL_ERROR_NONE:
+    //             printf("No error occurred.\n");
+    //             break;
+    //         case SSL_ERROR_ZERO_RETURN:
+    //             printf("Client closed the connection.\n");
+    //             break;
+    //         case SSL_ERROR_WANT_READ:
+    //             printf("SSL_accept needs more data (WANT_READ).\n");
+    //             break;
+    //         case SSL_ERROR_WANT_WRITE:
+    //             printf("SSL_accept needs to write more data (WANT_WRITE).\n");
+    //             break;
+    //         case SSL_ERROR_SYSCALL:
+    //             perror("System call error during SSL_accept");
+    //             break;
+    //         case SSL_ERROR_SSL:
+    //             printf("OpenSSL internal error occurred.\n");
+    //             ERR_print_errors_fp(stderr);
+    //             break;
+    //         default:
+    //             printf("Unknown error occurred: %d\n", err);
+    //             break;
+    //     }
+    //     SSL_free(ssl);
+    //     SSL_CTX_free(dynamic_ctx);
+    //     EVP_PKEY_free(key);
+    //     X509_free(dynamic_cert);
+    //     close(client_sock);
+    //     return NULL;
+    // }
+    
+    X509_free(dynamic_cert);
+    EVP_PKEY_free(key);
+
     return ssl;
     // SSL_free(ssl);
     // SSL_CTX_free(dynamic_ctx);
     // EVP_PKEY_free(key);
     // X509_free(dynamic_cert);
     // close(client_sock);
+    
 }
-
-
-// int main() {
-
-//     const char *cert_file = CERT_FILE;
-//     const char *key_file = KEY_FILE;
-
-//     initialize_openssl();
-
-//     EVP_PKEY *ca_key = load_private_key(key_file);
-//     X509 *ca_cert = load_certificate(cert_file);
-//     if (!ca_key || !ca_cert) {
-//         fprintf(stderr, "Failed to load CA key or certificate\n");
-//         exit(EXIT_FAILURE);
-//     }
-
-//     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
-//     if (server_sock < 0) {
-//         perror("Unable to create socket");
-//         exit(EXIT_FAILURE);
-//     }
-
-//     struct sockaddr_in addr;
-//     addr.sin_family = AF_INET;
-//     addr.sin_port = htons(5052);
-//     addr.sin_addr.s_addr = INADDR_ANY;
-
-//     if (bind(server_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-//         perror("Unable to bind");
-//         close(server_sock);
-//         exit(EXIT_FAILURE);
-//     }
-
-//     if (listen(server_sock, 10) < 0) {
-//         perror("Unable to listen");
-//         close(server_sock);
-//         exit(EXIT_FAILURE);
-//     }
-
-//     printf("Listening on port 5052...\n");
-
-//     while (1) {
-//         struct sockaddr_in client_addr;
-//         socklen_t client_len = sizeof(client_addr);
-//         int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len);
-//         if (client_sock < 0) {
-//             perror("Unable to accept");
-//             continue;
-//         }
-
-//         handle_client_with_dynamic_cert(client_sock, ca_key, ca_cert);
-//     }
-
-//     close(server_sock);
-//     EVP_PKEY_free(ca_key);
-//     X509_free(ca_cert);
-//     cleanup_openssl();
-
-//     return 0;
-// }

@@ -11,7 +11,7 @@ void handle_openssl_error() {
     ERR_print_errors_fp(stderr);
     exit(EXIT_FAILURE);
 }
-
+//
 int main() {
     // 1. RSA 키 생성
     EVP_PKEY *pkey = EVP_PKEY_new();
@@ -30,7 +30,7 @@ int main() {
     ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
     X509_gmtime_adj(X509_get_notBefore(x509), 0);
     X509_gmtime_adj(X509_get_notAfter(x509), 365 * 24 * 60 * 60L);
-
+//
     // 4. 인증서의 공개 키 설정
     if (X509_set_pubkey(x509, pkey) != 1) handle_openssl_error();
 

@@ -1,6 +1,3 @@
-#ifndef HTTP_H
-#define HTTP_H
-
 #define MAX_REQUEST_BODY_LENGTH (1024 * 1024)
 #define MAX_LINE_SIZE 4096
 #define MAX_METHOD_SIZE 16
@@ -12,6 +9,7 @@
 #define str4_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3
 #define str7_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3 && m[4] == c4 && m[5] == c5 && m[6] == c6
 
+//////////////////////////////////////
 typedef struct HTTPHeaderField {
     char *name;
     char *value;
@@ -37,14 +35,13 @@ typedef struct HTTPRequest {
     char *body;
     long length;
 } HTTPRequest;
+/////////////////////////////////////
 
 char *trim_whitespace(char *str);
-HTTPRequest *read_request(const char *buffer);
+void parse_query_params(char *query_string, HTTPRequest *request);
 void read_request_line(const char *buffer, HTTPRequest *request);
-void free_request(HTTPRequest *request);
 void read_header_field(const char *buffer, HTTPRequest *request);
+HTTPRequest *read_request(const char *buffer);
 char* find_Host_field(HTTPHeaderField* head);
-int find_port(const char* host);
-
-
-#endif
+int find_port(char* host);
+void free_request(HTTPRequest *request);

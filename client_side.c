@@ -84,8 +84,10 @@ typedef enum task_state_t {
 typedef struct task_t {
     int client_fd;
     bool client_side_https;
+    SSL_CTX* client_ctx;
     SSL* client_ssl;
     int remote_fd;
+    SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     bool remote_side_https;
     char buffer[MAX_BUFFER_SIZE];
@@ -100,7 +102,7 @@ static void log_exit(const char *fmt, ...);
 static void* xmalloc(size_t sz);
 static int get_IP(char* ip_str, const char* hostname, int port);
 static int connect_remote_http(const char* host, int port);
-SSL* connect_remote_https(int remote_fd);
+SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx);
 char* find_Host_field(HTTPHeaderField* head);
 int find_port(char* host);
 
@@ -180,9 +182,6 @@ int get_IP(char* ip_str, const char* hostname, int port) {
 
 int connect_remote_http(const char* hostname, int port) {
 
-    //char ip_str[INET_ADDRSTRLEN] = "93.184.215.14";
-    //int addr_status = get_IP(ip_str, host, port);
-
     struct hostent *host;
     if((host = gethostbyname(hostname)) == NULL) {
         perror(hostname);
@@ -209,9 +208,9 @@ int connect_remote_http(const char* hostname, int port) {
 }
 
 
-SSL* connect_remote_https(int remote_fd) {
+SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx) {
     // SSL 연결
-    SSL_CTX *remote_ctx = SSL_CTX_new(TLS_client_method());
+    remote_ctx = SSL_CTX_new(TLS_client_method());
     if (!remote_ctx) {
         perror("Failed to create SSL context for remote server");
         close(remote_fd);
@@ -607,9 +606,8 @@ int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const ch
 }
 
 SSL* handle_client_SSL_conn(int client_sock, 
-char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
-    
-    // 
+char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
+    //
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     send(client_sock, response, strlen(response), 0);
 
@@ -628,7 +626,7 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
         close(client_sock);
         return NULL;
     }
-
+    
     const char *cert_file = "/home/ubuntu/securezone/dynamic_cert.pem";
     const char *key_file = "/home/ubuntu/securezone/dynamic_key.pem";
 
@@ -640,30 +638,30 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
     }
 
     // SSL 컨텍스트 생성
-    SSL_CTX *dynamic_ctx = SSL_CTX_new(TLS_server_method());
-    SSL_CTX_set_min_proto_version(dynamic_ctx, TLS1_2_VERSION);
-    SSL_CTX_set_max_proto_version(dynamic_ctx, TLS1_3_VERSION);
-    SSL_CTX_set_cipher_list(dynamic_ctx, "HIGH:!aNULL:!MD5:!RC4");
+    client_ctx = SSL_CTX_new(TLS_server_method());
+    SSL_CTX_set_min_proto_version(client_ctx, TLS1_2_VERSION);
+    SSL_CTX_set_max_proto_version(client_ctx, TLS1_3_VERSION);
+    SSL_CTX_set_cipher_list(client_ctx, "HIGH:!aNULL:!MD5:!RC4");
 
-    if (!SSL_CTX_use_certificate_file(dynamic_ctx, cert_file, SSL_FILETYPE_PEM)) {
+    if (!SSL_CTX_use_certificate_file(client_ctx, cert_file, SSL_FILETYPE_PEM)) {
         perror("Failed to load certificate from file");
-        SSL_CTX_free(dynamic_ctx);
+        SSL_CTX_free(client_ctx);
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
         return NULL;
     }
 
-    if (!SSL_CTX_use_PrivateKey_file(dynamic_ctx, key_file, SSL_FILETYPE_PEM)) {
+    if (!SSL_CTX_use_PrivateKey_file(client_ctx, key_file, SSL_FILETYPE_PEM)) {
         perror("Failed to load private key from file");
-        SSL_CTX_free(dynamic_ctx);
+        SSL_CTX_free(client_ctx);
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
         close(client_sock);
         return NULL;
     }
 
-    SSL *ssl = SSL_new(dynamic_ctx);
+    SSL *ssl = SSL_new(client_ctx);
     SSL_set_fd(ssl, client_sock);
 
     // if (SSL_accept(ssl) <= 0) {
@@ -700,7 +698,11 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert) {
     //     X509_free(dynamic_cert);
     //     close(client_sock);
     //     return NULL;
-    // } 
+    // }
+    
+    X509_free(dynamic_cert);
+    EVP_PKEY_free(key);
+
     return ssl;
     // SSL_free(ssl);
     // SSL_CTX_free(dynamic_ctx);
@@ -793,7 +795,9 @@ int main(void) {
                     task->client_fd = client_fd;
                     task->client_side_https = false;
                     task->client_ssl = NULL;
+                    task->client_ctx = NULL;
                     task->remote_fd = -1;
+                    task->remote_ctx = NULL;
                     task->remote_ssl = NULL;
                     task->remote_side_https = false;
                     task->buffer_len = 0;
@@ -858,7 +862,7 @@ int main(void) {
                         printf("CONNECT request for %s:%d\n", task->req->host, task->req->port);
                         
                         // client ssl 연결
-                        task->client_ssl = handle_client_SSL_conn(task->client_fd, task->req->host, task->req->port, ca_key, ca_cert);
+                        task->client_ssl = handle_client_SSL_conn(task->client_fd, task->req->host, task->req->port, ca_key, ca_cert, task->client_ctx);
                         task->state = STATE_CLIENT_SSL_ACCEPT;
                         continue;
                     } else {
@@ -881,7 +885,11 @@ int main(void) {
                     int ret = SSL_accept(task->client_ssl);
                     if (ret == 1) {
                         printf("Client SSL Handshake Success\n");
+
                         task->state = STATE_CLIENT_SSL_READ;
+                        ev.events = EPOLLIN | EPOLLET;
+                        //ev.data.ptr = task;
+                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                         continue;
                     }
 
@@ -895,12 +903,33 @@ int main(void) {
                             printf("SSL Handshake error - %d\n", err);
                             exit(1);
                     }
-                    
                 } else if (task->state == STATE_CLIENT_SSL_READ) {
                     
                     memset(task->buffer, 0, MAX_BUFFER_SIZE);
-                    task->buffer_len = SSL_read(task->client_ssl, task->buffer, MAX_BUFFER_SIZE - 1);
-                    
+                    task->buffer_len = SSL_read(task->client_ssl, task->buffer, MAX_BUFFER_SIZE);
+                    if(task->buffer_len < 0) {
+                        int err = SSL_get_error(task->client_ssl, task->buffer_len);
+                        switch (err) {
+                            case SSL_ERROR_WANT_READ:
+                                printf("SSL_read: SSL_ERROR_WANT_READ\n");
+                                break;
+                            case SSL_ERROR_WANT_WRITE:
+                                printf("SSL_read: SSL_ERROR_WANT_WRITE\n");
+                                break;
+                            case SSL_ERROR_ZERO_RETURN:
+                                printf("SSL_read: SSL_ERROR_ZERO_RETURN (connection closed by peer)\n");
+                                break;
+                            case SSL_ERROR_SYSCALL:
+                                printf("SSL_read: SSL_ERROR_SYSCALL, errno: %d\n", errno);
+                                perror("SSL_read syscall error");
+                                break;
+                            default:
+                                printf("SSL_read: Unknown error %d\n", err);
+                                ERR_print_errors_fp(stderr);  // OpenSSL 에러 스택 출력
+                                break;
+                        }
+                    }
+
                     free_request(task->req);
                     task->req = read_request(task->buffer);
 
@@ -909,7 +938,7 @@ int main(void) {
                     }
                     // remote ssl 연결
                     task->remote_fd = connect_remote_http(task->req->host, task->req->port);
-                    task->remote_ssl = connect_remote_https(task->remote_fd);
+                    task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
                     
                     ev.events = EPOLLIN | EPOLLET;
                     ev.data.ptr = task;
@@ -977,14 +1006,37 @@ int main(void) {
                         ev.events = EPOLLIN | EPOLLET;
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
                     }
-                    
+
                 } else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
                     if(task->remote_side_https == true) {
                         //SSL_read()
                         memset(task->buffer, 0, MAX_BUFFER_SIZE);
-                        task->buffer_len = SSL_read(task->remote_ssl, task->buffer, MAX_BUFFER_SIZE - 1);
+                        task->buffer_len = SSL_read(task->remote_ssl, task->buffer, MAX_BUFFER_SIZE);
+                        if(task->buffer_len < 0) {
+                            int err = SSL_get_error(task->remote_ssl, task->buffer_len);
+                            switch (err) {
+                                case SSL_ERROR_WANT_READ:
+                                    printf("SSL_read: SSL_ERROR_WANT_READ\n");
+                                    break;
+                                case SSL_ERROR_WANT_WRITE:
+                                    printf("SSL_read: SSL_ERROR_WANT_WRITE\n");
+                                    break;
+                                case SSL_ERROR_ZERO_RETURN:
+                                    printf("SSL_read: SSL_ERROR_ZERO_RETURN (connection closed by peer)\n");
+                                    break;
+                                case SSL_ERROR_SYSCALL:
+                                    printf("SSL_read: SSL_ERROR_SYSCALL, errno: %d\n", errno);
+                                    perror("SSL_read syscall error");
+                                    break;
+                                default:
+                                    printf("SSL_read: Unknown error %d\n", err);
+                                    ERR_print_errors_fp(stderr);  // OpenSSL 에러 스택 출력
+                                    break;
+                            }
+                        }
+                        
                         printf("Data received from remote: %d bytes\n", task->buffer_len);
                         printf("%s\n", task->buffer);
 
@@ -1018,9 +1070,31 @@ int main(void) {
                                     exit(1);
                                 }
                             } else {
-                                printf("Data received from remote: %d bytes\n", task->buffer_len);
-                                printf("%s\n", task->buffer);
-                                break;
+                                if(task->buffer_len < 0) {
+                                    if (errno ==EAGAIN || errno == EWOULDBLOCK) {
+                                        break;
+                                    } else {
+                                        perror("recv failed");
+                                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                        close(task->client_fd);
+                                        close(task->remote_fd);
+                                        free(task);
+                                        exit(1);
+                                    }
+                                } else if (task->buffer_len == 0) {
+                                    printf("client disconnected\n");
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                    close(task->client_fd);
+                                    close(task->remote_fd);
+                                    free(task);
+                                    exit(1);
+                                } else {
+                                    printf("Data received from remote: %d bytes\n", task->buffer_len);
+                                    printf("%s\n", task->buffer);
+                                    break;
+                                } 
                             }
                         }
                         task->state = STATE_CLIENT_WRITE;
@@ -1049,6 +1123,10 @@ int main(void) {
                         // ev.events = EPOLLIN | EPOLLET;
                         // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                         free_request(task->req);
+                        SSL_free(task->client_ssl);
+                        SSL_free(task->remote_ssl);
+                        SSL_CTX_free(task->client_ctx);
+                        SSL_CTX_free(task->remote_ctx);
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                         close(task->remote_fd);
@@ -1056,7 +1134,7 @@ int main(void) {
                         free(task);
                     } else {
                         send(task->client_fd, task->buffer, task->buffer_len, 0);
-                        // // 세션 유지시
+                        // 세션 유지시
                         // task->state = STATE_CLIENT_READ;
                         // ev.events = EPOLLIN | EPOLLET;
                         // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
@@ -1064,6 +1142,10 @@ int main(void) {
 
                         // 세션 종료시
                         free_request(task->req);
+                        SSL_free(task->client_ssl);
+                        SSL_free(task->remote_ssl);
+                        SSL_CTX_free(task->client_ctx);
+                        SSL_CTX_free(task->remote_ctx);
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                         close(task->remote_fd);

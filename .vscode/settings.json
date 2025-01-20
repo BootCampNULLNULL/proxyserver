@@ -8,6 +8,7 @@
         "string.h": "c",
         "stdarg.h": "c",
         "stdio.h": "c",
-        "x509v3.h": "c"
+        "x509v3.h": "c",
+        "http.h": "c"
     }
 }

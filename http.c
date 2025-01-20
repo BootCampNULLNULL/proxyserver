@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -13,8 +14,6 @@
 #include <sys/types.h>
 #include "http.h"
 
-
-// 문자열의 공백을 제거하는 유틸리티 함수
 char *trim_whitespace(char *str) {
     char *end;
 
@@ -155,11 +154,9 @@ HTTPRequest *read_request(const char *buffer) {
     }
 
     // Host 필드와 포트 설정
-    char* host = find_Host_field(request->header);
-    if (host) {
-        request->host = strdup(host);
-        request->port = find_port(host);
-        free(host);
+    request->host = find_Host_field(request->header);
+    if (request->host) {
+        request->port = find_port(request->host);
     } else {
         request->host = NULL;
         request->port = 0; // Host가 없을 경우
@@ -226,48 +223,3 @@ void free_request(HTTPRequest *request) {
     if (request->body) free(request->body);
     free(request);
 }
-
-// int main() {
-//     char raw_request[] =
-//         "GET /index.html?name=test&age=25 HTTP/1.1\r\n"
-//         "Host: www.example.com:443\r\n"
-//         "User-Agent: curl/7.68.0\r\n"
-//         "Accept: */*\r\n"
-//         "\r\n";
-
-//     HTTPRequest* req = read_request(raw_request);
-
-//     // 요청 라인 출력
-//     printf("Method: %s\n", req->method);
-//     printf("Path: %s\n", req->path);
-//     printf("HTTP Version: 1.%d\n", req->protocol_minor_version);
-
-//     // 쿼리 파라미터 출력
-//     HTTPQueryParam *query = req->query;
-//     printf("Query Parameters:\n");
-//     while (query) {
-//         printf("  %s: %s\n", query->name, query->value);
-//         query = query->next;
-//     }
-
-//     // 헤더 출력
-//     HTTPHeaderField *header = req->header;
-//     printf("Headers:\n");
-//     while (header) {
-//         printf("  %s: %s\n", header->name, header->value);
-//         header = header->next;
-//     }
-
-//     // Host 필드 값 추출
-//     if (req->host) {
-//         printf("Host: %s\n", req->host); // 호스트 이름 출력
-//         printf("Port: %d\n", req->port); // 포트 출력
-//     } else {
-//         printf("Host 필드가 없습니다.\n");
-//     }
-
-//     // 메모리 해제
-//     free_request(req);
-
-//     return 0;
-// }
