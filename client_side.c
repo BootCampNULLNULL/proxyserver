@@ -907,18 +907,8 @@ int main(void) {
                             ev.events = EPOLLIN | EPOLLET;
                             ev.data.ptr = task;
                             epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, &ev);
-
                             int ret = SSL_connect(task->remote_ssl);
-                            if (ret == 1) {
-                                printf("Remote SSL Handshake Success\n");
 
-                                ev.events = EPOLLOUT | EPOLLET;
-                                ev.data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유
-                                epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
-
-                                task->state = STATE_REMOTE_WRITE;
-                                continue;
-                            }
                             int err = SSL_get_error(task->remote_ssl, ret);
                             switch(err) {
                                 case SSL_ERROR_WANT_READ:
@@ -931,13 +921,16 @@ int main(void) {
                                     printf("Remote SSL Handshake error - %d\n", err);
                                     exit(1);
                             }
-                        }
 
-                        // 다음 이벤트를 기다려야 하면
-                        printf("wait event\n");
-                        task->state = STATE_CLIENT_SSL_READ;
-                        ev.events = EPOLLIN | EPOLLET;
-                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                            task->state = STATE_REMOTE_SSL_CONNECT;
+                        } else {
+                            // 다음 이벤트를 기다려야 하면
+                            printf("wait event\n");
+                            task->state = STATE_CLIENT_SSL_READ;
+                            ev.events = EPOLLIN | EPOLLET;
+                            ev.data.ptr = task;
+                            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        }
                         continue;
                     }
 
@@ -957,6 +950,17 @@ int main(void) {
                     memset(task->buffer, 0, MAX_BUFFER_SIZE);
                     task->buffer_len = SSL_read(task->client_ssl, task->buffer, MAX_BUFFER_SIZE);
 
+                    if (task->buffer_len <= 0) {
+                        int err = SSL_get_error(task->client_ssl, task->buffer_len);
+                        if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
+                            // SSL_read needs more data
+                            continue;
+                        } else {
+                            printf("Client SSL Read error - %d\n", err);
+                            exit(1);
+                        }
+                    }
+
                     free_request(task->req);
                     task->req = read_request(task->buffer);
 
@@ -971,30 +975,8 @@ int main(void) {
                     ev.data.ptr = task;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, &ev);
 
-                    int ret = SSL_connect(task->remote_ssl);
-                    if (ret == 1) {
-                        printf("Remote SSL Handshake Success\n");
+                    task->state = STATE_REMOTE_SSL_CONNECT;
 
-                        ev.events = EPOLLOUT | EPOLLET;
-                        ev.data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유
-                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
-
-                        task->state = STATE_REMOTE_WRITE;
-                        continue;
-                    }
-
-                    int err = SSL_get_error(task->remote_ssl, ret);
-                    switch(err) {
-                        case SSL_ERROR_WANT_READ:
-                            task->state = STATE_REMOTE_SSL_CONNECT;
-                            continue;
-                        case SSL_ERROR_WANT_WRITE:
-                            task->state = STATE_REMOTE_SSL_CONNECT;
-                            continue;
-                        default:
-                            printf("Remote SSL Handshake error - %d\n", err);
-                            exit(1);
-                    }
                 } else if (task->state == STATE_REMOTE_SSL_CONNECT) {
                     int ret = SSL_connect(task->remote_ssl);
                     if (ret == 1) {
@@ -1005,20 +987,18 @@ int main(void) {
                         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
 
                         task->state = STATE_REMOTE_WRITE;
-                        continue;
+                    } else {
+                        int err = SSL_get_error(task->remote_ssl, ret);
+                        switch(err) {
+                            case SSL_ERROR_WANT_READ:
+                                continue;
+                            case SSL_ERROR_WANT_WRITE:
+                                continue;
+                            default:
+                                printf("SSL Handshake error - %d\n", err);
+                                exit(1);
+                        }
                     }
-
-                    int err = SSL_get_error(task->remote_ssl, ret);
-                    switch(err) {
-                        case SSL_ERROR_WANT_READ:
-                            continue;
-                        case SSL_ERROR_WANT_WRITE:
-                            continue;
-                        default:
-                            printf("SSL Handshake error - %d\n", err);
-                            exit(1);
-                    }
-
                 } else if (task->state == STATE_REMOTE_WRITE) {
                     // 원격 서버로 데이터 송신
                     if (task->remote_side_https == true) {
