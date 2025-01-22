@@ -771,12 +771,12 @@ int main(void) {
                     
                     // client 요청 recv
                     while (1) {
-                        task->buffer_len = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, 0);
-                        if (task->buffer_len > 0) {
+                        int ret = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+                        if (ret > 0) {
                             // 데이터 처리
-                            printf("Data received from client: %d bytes\n", task->buffer_len);
-                            printf("%.*s\n", task->buffer_len, task->buffer); // 안전하게 출력
-                        } else if (task->buffer_len == 0) {
+                            task->buffer_len = task->buffer_len + ret;
+                            continue;
+                        } else if (ret == 0) {
                             // 클라이언트 연결 종료
                             printf("Client disconnected\n");
                             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
@@ -784,11 +784,11 @@ int main(void) {
                             close(task->client_fd);
                             close(task->remote_fd);
                             free(task);
-                            break; // 종료
-                        } else { // task->buffer_len < 0
+                            break;
+                        } else {
                             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                                 // 읽을 데이터가 더 이상 없음
-                                break; // recv 종료
+                                break;
                             } else {
                                 // recv 실패
                                 perror("recv failed");
@@ -799,12 +799,18 @@ int main(void) {
                             }
                         }
                     }
+
+                    printf("Data received from client: %d bytes\n", task->buffer_len);
+                    printf("%.*s\n", task->buffer_len, task->buffer); // 안전하게 출력
+                    
                     // http 요청 로깅
 
                     // http 요청 파싱
                     task->req = read_request(task->buffer);
                     
                     // url db 조회 -> 필터링 
+                            
+
                     // CONNECT => ssl connect => GET or POST 요청 recv
                     if(strcmp(task->req->method, "CONNECT") == 0) {
                         task->client_side_https = true;
@@ -950,7 +956,6 @@ int main(void) {
                             } else {
                                 int err = SSL_get_error(task->remote_ssl, ret);
                                 if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
-                                    // 송신 버퍼가 꽉 찬 경우
                                     printf("Send buffer full, waiting for EPOLLOUT event...\n");
                                     ev.events = EPOLLOUT | EPOLLET;
                                     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
@@ -963,11 +968,38 @@ int main(void) {
                             }
                         }
                     } else {
-                        // 일반 TCP 데이터 송신
-                        send(task->remote_fd, task->buffer, MAX_BUFFER_SIZE, 0);
-                        task->state = STATE_REMOTE_READ;
-                        ev.events = EPOLLIN | EPOLLET;
-                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
+                        while (task->buffer_len > 0) {
+                            ssize_t ret = send(task->remote_fd, task->buffer + sent_bytes, task->buffer_len, 0);
+                            if (ret > 0) {
+                                sent_bytes += ret;
+                                task->buffer_len -= ret;
+
+                                // 모든 데이터를 전송 완료한 경우
+                                if (task->buffer_len == 0) {
+                                    task->state = STATE_REMOTE_READ;
+                                    ev.events = EPOLLIN | EPOLLET;
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
+                                    break;
+                                }
+                            } else if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+                                if (errno == EAGAIN || EWOULDBLOCK ) {
+                                    printf("Send buffer full, waiting for EPOLLOUT event...\n");
+                                    ev.events = EPOLLOUT | EPOLLET;
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
+                                    break;
+                                } else if (errno == EPIPE) {
+                                    printf("Broken pipe: Connection closed by peer.\n");
+                                    exit(1);
+                                } else {
+                                    perror("send failed");
+                                    exit(1);
+                                }
+                            } else {
+                                // send 실패 처리
+                                perror("send failed");
+                                exit(1);
+                            }
+                        }
                     }
                 } else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
@@ -1036,10 +1068,23 @@ int main(void) {
                             } else if (ret == 0) {
                                 // remote 연결 종료
                                 printf("remote disconnected\n");
-                                break;
+                                if (task->buffer_len == 0) {
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                    free_request(task->req);
+                                    close(task->client_fd);
+                                    close(task->remote_fd);
+                                    free(task);
+                                    break;
+                                } else {
+                                    break;
+                                }
                             } else {
                                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
                                     // 읽을 데이터가 더 이상 없음
+                                    printf("No data to read\n");
+                                    ev.events = EPOLLIN | EPOLLET;
+                                    ev.data.ptr = task;
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, &ev);
                                     break;
                                 } else {
                                     // recv 실패
@@ -1053,12 +1098,13 @@ int main(void) {
                                 }
                             }
                         }
-                        printf("Data received from remote: %d bytes\n", task->buffer_len);
-                        printf("%s\n", task->buffer);
-
-                        task->state = STATE_CLIENT_WRITE;
-                        ev.events = EPOLLOUT | EPOLLET;
-                        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        if (task->buffer_len > 0) {
+                            printf("Data received from remote: %d bytes\n", task->buffer_len);
+                            printf("%s\n", task->buffer);
+                            task->state = STATE_CLIENT_WRITE;
+                            ev.events = EPOLLOUT | EPOLLET;
+                            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
+                        }
                     }
                 } else if (task->state == STATE_CLIENT_WRITE) {
                     if(task->client_side_https == true) {
