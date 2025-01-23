@@ -12,7 +12,8 @@
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "${file}",
                 "-lssl",
-                "-lcrypto"
+                "-lcrypto",
+                "-lmysqlclient"
             ],
             "options": {
                 "cwd": "${fileDirname}"

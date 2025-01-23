@@ -238,51 +238,10 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
 
     SSL *ssl = SSL_new(client_ctx);
     SSL_set_fd(ssl, client_sock);
-
-    // if (SSL_accept(ssl) <= 0) {
-    //     fprintf(stderr, "SSL handshake failed\n");
-    //     int err = SSL_get_error(ssl, -1);
-
-    //     switch (err) {
-    //         case SSL_ERROR_NONE:
-    //             printf("No error occurred.\n");
-    //             break;
-    //         case SSL_ERROR_ZERO_RETURN:
-    //             printf("Client closed the connection.\n");
-    //             break;
-    //         case SSL_ERROR_WANT_READ:
-    //             printf("SSL_accept needs more data (WANT_READ).\n");
-    //             break;
-    //         case SSL_ERROR_WANT_WRITE:
-    //             printf("SSL_accept needs to write more data (WANT_WRITE).\n");
-    //             break;
-    //         case SSL_ERROR_SYSCALL:
-    //             perror("System call error during SSL_accept");
-    //             break;
-    //         case SSL_ERROR_SSL:
-    //             printf("OpenSSL internal error occurred.\n");
-    //             ERR_print_errors_fp(stderr);
-    //             break;
-    //         default:
-    //             printf("Unknown error occurred: %d\n", err);
-    //             break;
-    //     }
-    //     SSL_free(ssl);
-    //     SSL_CTX_free(dynamic_ctx);
-    //     EVP_PKEY_free(key);
-    //     X509_free(dynamic_cert);
-    //     close(client_sock);
-    //     return NULL;
-    // }
     
     X509_free(dynamic_cert);
     EVP_PKEY_free(key);
 
     return ssl;
-    // SSL_free(ssl);
-    // SSL_CTX_free(dynamic_ctx);
-    // EVP_PKEY_free(key);
-    // X509_free(dynamic_cert);
-    // close(client_sock);
     
 }

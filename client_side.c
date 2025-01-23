@@ -21,6 +21,7 @@
 #include <openssl/rsa.h>
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
+#include <mysql/mysql.h>
 // #include "http.h"
 // #include "ssl_conn.h"
 // #include "client_side.h"
@@ -41,7 +42,12 @@
 #define MAX_PROTOCOL_SIZE 16
 #define MAX_HEADER_SIZE 8192
 
-
+#define DB_SERVER "127.0.0.1"
+#define DB_PORT 3306
+#define DB_USER "root"
+#define DB_PASSWORD "securezone"
+#define DB_DATABASE "securezone"
+ 
 //////////////////////////////////////
 typedef struct HTTPHeaderField {
     char *name;
@@ -223,6 +229,76 @@ SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx) {
     SSL_set_fd(remote_ssl, remote_fd);
 
     return remote_ssl;
+}
+//////////////////////////////////////////////////////////////////////////////
+MYSQL* connect_to_database() {
+    MYSQL *conn = mysql_init(NULL);
+
+    if (!conn) {
+        fprintf(stderr, "mysql_init() failed\n");
+        return NULL;
+    }
+
+    if (!mysql_real_connect(conn, DB_SERVER, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT, NULL, 0)) {
+        fprintf(stderr, "Connection failed: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        return NULL;
+    }
+
+    return conn;
+}
+
+int url_check(MYSQL *conn, const char *url) {
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+
+    // Prepare query
+    char query[2048];
+    snprintf(query, sizeof(query),
+             "SELECT u.url_pattern FROM URL u "
+             "JOIN Policy_URL pu ON u.url_id = pu.url_id "
+             "JOIN Policy p ON pu.policy_id = p.policy_id "
+             "WHERE u.url_pattern = '%s' AND p.active = TRUE", url);
+
+    // Execute query
+    if (mysql_query(conn, query)) {
+        fprintf(stderr, "Query failed: %s\n", mysql_error(conn));
+        return -1;
+    }
+
+    res = mysql_store_result(conn);
+    if (res == NULL) {
+        fprintf(stderr, "Result retrieval failed: %s\n", mysql_error(conn));
+        return -1;
+    }
+
+    // Check if any row is returned
+    int is_blocked = (mysql_num_rows(res) > 0);
+
+    // Clean up
+    mysql_free_result(res);
+
+    return is_blocked;
+}
+
+void response_block_page(int sock_fd) {
+    const char *http_response =
+        "HTTP/1.1 403 Forbidden\r\n"                     // 상태 코드
+        "Content-Type: text/html; charset=UTF-8\r\n"     // 헤더: 콘텐츠 타입
+        "Content-Length: 111\r\n"                        // 헤더: 본문 길이 (정확히 계산해야 함)
+        "Connection: close\r\n"                          // 헤더: 연결 종료
+        "\r\n"                                           // 헤더와 본문 구분
+        "<html>"                                         // 본문 시작
+        "<head><title>Blocked</title></head>"
+        "<body><h1>Access Denied</h1>"
+        "<p>This URL is blocked by policy.</p>"
+        "</body>"
+        "</html>";
+
+    // 응답 데이터 전송
+    send(sock_fd, http_response, strlen(http_response), 0);
+
+    return;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -679,6 +755,9 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
+    // DB connect
+    MYSQL* conn = connect_to_database();
+
     int server_fd;
     struct sockaddr_in seraddr;
 
@@ -744,7 +823,7 @@ int main(void) {
                     set_nonblocking(client_fd);
 
                     task_t* task = (task_t*)malloc(sizeof(task_t));
-                    
+
                     task->client_fd = client_fd;
                     task->client_side_https = false;
                     task->client_ssl = NULL;
@@ -808,8 +887,19 @@ int main(void) {
                     // http 요청 파싱
                     task->req = read_request(task->buffer);
                     
-                    // url db 조회 -> 필터링 
-                            
+                    // url db 쿼리 -> 필터링 
+                    int result = url_check(conn, task->req->host);
+                    if(result) {
+                        // 블락페이지 응답
+                        response_block_page(task->client_fd);
+
+                        printf("blocked url - %s\n", task->req->host);
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                        close(task->client_fd);
+                        free_request(task->req);
+                        free(task);
+                        break;
+                    }
 
                     // CONNECT => ssl connect => GET or POST 요청 recv
                     if(strcmp(task->req->method, "CONNECT") == 0) {
@@ -1010,7 +1100,6 @@ int main(void) {
                         task->buffer_len = 0;
                         while(1) {
                             int ret = SSL_read(task->remote_ssl, task->buffer, MAX_BUFFER_SIZE);
-                            //printf("asda\n");
                             if (ret > 0) {
                                 task->buffer_len = task->buffer_len + ret;
                                 continue;
