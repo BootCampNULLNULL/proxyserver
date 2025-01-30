@@ -11,6 +11,7 @@ void handle_openssl_error() {
     ERR_print_errors_fp(stderr);
     exit(EXIT_FAILURE);
 }
+
 //
 int main() {
     // 1. RSA 키 생성

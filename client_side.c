@@ -427,6 +427,7 @@ HTTPRequest *read_request(const char *buffer) {
         fprintf(stderr, "잘못된 HTTP 요청\n");
         exit(EXIT_FAILURE);
     }
+
     size_t line_length = line_end - current;
     strncpy(line, current, line_length);
     line[line_length] = '\0';
@@ -994,6 +995,7 @@ int main(void) {
                     }
                     
                     task->remote_fd = connect_remote_http(task->req->host, task->req->port);
+                    
                     // remote ssl 연결
                     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
 
@@ -1243,4 +1245,7 @@ int main(void) {
 }
 
 // 문제점 1. STATE_CLIENT_WRITE 상태에서 클라이언트로 최종 수신 종료 이후 세션 유지 or 종료
-// 문제점 2. 응답 버퍼 크기 초과 데이터 고려 필요요
+// 문제점 2. 응답 버퍼 크기 초과 데이터 고려 필요
+// 문제점 3. HTTP/2 버전 지원 X
+// 문제점 4. 요청/응답을 받았다의 기준이 한번의 이벤트에 recv send가 끝났을때임
+//           http 프로토콜 수준의 검사가 아니기 때문에 요청/응답이 여러번의 이벤트로 전송이 될 경우 유효한 데이터를 전송하지 못함
