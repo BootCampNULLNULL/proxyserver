@@ -96,7 +96,12 @@ typedef struct task_t {
     SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     bool remote_side_https;
+
     char buffer[MAX_BUFFER_SIZE];
+    char* request_buffer;
+    int request_buffer_size;
+    char* response_buffer;
+    int response_buffer_size;
     int buffer_len;
     HTTPRequest* req;
     task_state_t state;
@@ -833,6 +838,11 @@ int main(void) {
                     task->remote_ctx = NULL;
                     task->remote_ssl = NULL;
                     task->remote_side_https = false;
+                    task->request_buffer_size = MAX_BUFFER_SIZE;
+                    task->request_buffer = (char*)malloc(task->request_buffer_size);
+
+                    task->response_buffer_size = MAX_BUFFER_SIZE;
+                    task->response_buffer = (char*)malloc(task->response_buffer_size);
                     task->buffer_len = 0;
                     task->state = STATE_CLIENT_READ;
 
@@ -847,11 +857,27 @@ int main(void) {
 
                 if (task->state == STATE_CLIENT_READ) {
                     // 클라이언트 데이터 수신
-                    memset(task->buffer, 0, MAX_BUFFER_SIZE);
-                    
+                    memset(task->request_buffer, 0, task->request_buffer_size);
+                    task->buffer_len = 0;
                     // client 요청 recv
                     while (1) {
-                        int ret = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+                        if(task->buffer_len == task->request_buffer_size) {
+                            task->request_buffer_size = task->request_buffer_size * 2;
+                            task->request_buffer = (char*)realloc(task->request_buffer, task->request_buffer_size);
+                            if(!task->request_buffer) {
+                                perror("realloc failed\n");
+                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                free(task->request_buffer);
+                                close(task->client_fd);
+                                free(task);
+                                exit(1);
+                            }
+                        }
+
+                        // 남은 공간 체크
+                        int remaining_space = task->request_buffer_size - task->buffer_len;
+                        
+                        int ret = recv(task->client_fd, task->request_buffer + task->buffer_len, remaining_space, 0);
                         if (ret > 0) {
                             // 데이터 처리
                             task->buffer_len = task->buffer_len + ret;
@@ -881,12 +907,12 @@ int main(void) {
                     }
 
                     printf("Data received from client: %d bytes\n", task->buffer_len);
-                    printf("%.*s\n", task->buffer_len, task->buffer); // 안전하게 출력
+                    printf("%.*s\n", task->buffer_len, task->request_buffer); // 안전하게 출력
                     
                     // http 요청 로깅
 
                     // http 요청 파싱
-                    task->req = read_request(task->buffer);
+                    task->req = read_request(task->request_buffer);
                     
                     // url db 쿼리 -> 필터링 
                     int result = url_check(conn, task->req->host);
@@ -956,10 +982,30 @@ int main(void) {
                             exit(1);
                     }
                 } else if (task->state == STATE_CLIENT_SSL_READ) {
-                    memset(task->buffer, 0, MAX_BUFFER_SIZE);
+                    // connect 요청이 담긴 버퍼 free
+                    free(task->request_buffer);
+                    task->request_buffer_size = MAX_BUFFER_SIZE;
+                    task->request_buffer = (char*)malloc(task->request_buffer_size);
+
+                    memset(task->request_buffer, 0, task->request_buffer_size);
                     task->buffer_len = 0;
+
                     while(1) {
-                        int ret = SSL_read(task->client_ssl, task->buffer, MAX_BUFFER_SIZE);
+                        if(task->buffer_len == task->request_buffer_size) {
+                            task->request_buffer_size = task->request_buffer_size * 2;
+                            task->request_buffer = (char*)realloc(task->request_buffer, task->request_buffer_size);
+                            if(!task->request_buffer) {
+                                perror("realloc failed\n");
+                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                free(task->request_buffer);
+                                close(task->client_fd);
+                                free(task);
+                                exit(1);
+                            }
+                        }
+                        int remaining_space = task->request_buffer_size - task->buffer_len;
+
+                        int ret = SSL_read(task->client_ssl, task->request_buffer, remaining_space);
                         if (ret > 0) {
                             task->buffer_len = task->buffer_len + ret;
                             continue;
@@ -985,10 +1031,10 @@ int main(void) {
                     }
 
                     printf("Data received from client: %d bytes\n", task->buffer_len);
-                    printf("%s\n", task->buffer);
+                    printf("%s\n", task->request_buffer);
 
                     free_request(task->req);
-                    task->req = read_request(task->buffer);
+                    task->req = read_request(task->request_buffer);
 
                     if(task->req->port == -1) {
                         task->req->port = DEFUALT_HTTPS_PORT;
@@ -1033,7 +1079,7 @@ int main(void) {
                     if (task->remote_side_https == true) {
                         // HTTPS 데이터 송신
                         while (task->buffer_len > 0) {
-                            int ret = SSL_write(task->remote_ssl, task->buffer + sent_bytes, task->buffer_len);
+                            int ret = SSL_write(task->remote_ssl, task->request_buffer + sent_bytes, task->buffer_len);
                             if (ret > 0) {
                                 sent_bytes += ret;
                                 task->buffer_len -= ret;
@@ -1061,10 +1107,10 @@ int main(void) {
                         }
                     } else {
                         while (task->buffer_len > 0) {
-                            ssize_t ret = send(task->remote_fd, task->buffer + sent_bytes, task->buffer_len, 0);
+                            ssize_t ret = send(task->remote_fd, task->request_buffer + sent_bytes, task->buffer_len, 0);    //send한 데이터 길이만큼 주소 이동
                             if (ret > 0) {
                                 sent_bytes += ret;
-                                task->buffer_len -= ret;
+                                task->buffer_len -= ret; //send한 데이터길이 만큼
 
                                 // 모든 데이터를 전송 완료한 경우
                                 if (task->buffer_len == 0) {
@@ -1098,10 +1144,31 @@ int main(void) {
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
                     if(task->remote_side_https == true) {
                         //SSL_read()
-                        memset(task->buffer, 0, MAX_BUFFER_SIZE);
+                        memset(task->response_buffer, 0, task->response_buffer_size);
                         task->buffer_len = 0;
                         while(1) {
-                            int ret = SSL_read(task->remote_ssl, task->buffer, MAX_BUFFER_SIZE);
+                            if(task->buffer_len == task->response_buffer_size) {
+                                task->response_buffer_size = task->response_buffer_size * 2;
+                                task->response_buffer = (char*)realloc(task->response_buffer, task->response_buffer_size);
+                                if(!task->response_buffer) {
+                                    perror("realloc failed\n");
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                    free(task->request_buffer);
+                                    free(task->response_buffer);
+                                    SSL_free(task->client_ssl);
+                                    SSL_CTX_free(task->client_ctx);
+                                    SSL_free(task->remote_ssl);
+                                    SSL_CTX_free(task->remote_ctx);
+                                    close(task->client_fd);
+                                    close(task->remote_fd);
+                                    free(task);
+                                    exit(1);
+                                }
+                            }
+                            int remaining_space = task->response_buffer_size - task->buffer_len;
+
+                            int ret = SSL_read(task->remote_ssl, task->response_buffer + task->buffer_len, remaining_space);
                             if (ret > 0) {
                                 task->buffer_len = task->buffer_len + ret;
                                 continue;
@@ -1109,7 +1176,10 @@ int main(void) {
                                 printf("remote disconnected\n");
                                 if (task->buffer_len == 0) {
                                     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                                     free_request(task->req);
+                                    free(task->request_buffer);
+                                    free(task->response_buffer);
                                     SSL_free(task->client_ssl);
                                     SSL_CTX_free(task->client_ctx);
                                     SSL_free(task->remote_ssl);
@@ -1141,18 +1211,36 @@ int main(void) {
                         // 아닌 경우 remote에서 응답이 아직 안온 상태에서 SSL_read 하였으므로, 다시 이벤트를 기다림
                         if (task->buffer_len > 0) {
                             printf("Data received from remote: %d bytes\n", task->buffer_len);
-                            printf("%s\n", task->buffer);
+                            printf("%s\n", task->response_buffer);
 
                             task->state = STATE_CLIENT_WRITE;
                             ev.events = EPOLLOUT | EPOLLET;
                             epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                         }
-
                     } else {
-                        memset(task->buffer, 0, MAX_BUFFER_SIZE);
+                        memset(task->response_buffer, 0, task->response_buffer_size);
                         task->buffer_len = 0;
                         while (1) {
-                            int ret = recv(task->remote_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+                            if(task->buffer_len == task->response_buffer_size) {
+                                task->response_buffer_size = task->response_buffer_size * 2;
+                                task->response_buffer = (char*)realloc(task->response_buffer, task->response_buffer_size);
+                                if(!task->response_buffer) {
+                                    perror("realloc failed\n");
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                    free(task->request_buffer);
+                                    close(task->client_fd);
+                                    free(task->response_buffer);
+                                    close(task->remote_fd);
+                                    free(task);
+                                    exit(1);
+                                }
+                            }
+
+                            // 남은 공간 체크
+                            int remaining_space = task->response_buffer_size - task->buffer_len;
+                            
+                            int ret = recv(task->remote_fd, task->response_buffer + task->buffer_len, remaining_space, 0);
                             if (ret > 0) {
                                 task->buffer_len = task->buffer_len + ret;
                                 continue;
@@ -1189,9 +1277,10 @@ int main(void) {
                                 }
                             }
                         }
+
                         if (task->buffer_len > 0) {
                             printf("Data received from remote: %d bytes\n", task->buffer_len);
-                            printf("%s\n", task->buffer);
+                            printf("%s\n", task->response_buffer);
                             task->state = STATE_CLIENT_WRITE;
                             ev.events = EPOLLOUT | EPOLLET;
                             epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
@@ -1200,11 +1289,13 @@ int main(void) {
                 } else if (task->state == STATE_CLIENT_WRITE) {
                     if(task->client_side_https == true) {
                         // SSL_write()
-                        SSL_write(task->client_ssl, task->buffer, task->buffer_len);
+                        SSL_write(task->client_ssl, task->response_buffer, task->buffer_len);
                         // task->state = STATE_CLIENT_READ;
                         // ev.events = EPOLLIN | EPOLLET;
                         // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, &ev);
                         free_request(task->req);
+                        free(task->request_buffer);
+                        free(task->response_buffer);
                         SSL_free(task->client_ssl);
                         SSL_free(task->remote_ssl);
                         SSL_CTX_free(task->client_ctx);
@@ -1215,7 +1306,7 @@ int main(void) {
                         close(task->client_fd);
                         free(task);
                     } else {
-                        send(task->client_fd, task->buffer, task->buffer_len, 0);
+                        send(task->client_fd, task->response_buffer, task->buffer_len, 0);
                         // 세션 유지시
                         // task->state = STATE_CLIENT_READ;
                         // ev.events = EPOLLIN | EPOLLET;
@@ -1224,6 +1315,8 @@ int main(void) {
 
                         // 세션 종료시
                         free_request(task->req);
+                        free(task->request_buffer);
+                        free(task->response_buffer);
                         SSL_free(task->client_ssl);
                         SSL_free(task->remote_ssl);
                         SSL_CTX_free(task->client_ctx);
