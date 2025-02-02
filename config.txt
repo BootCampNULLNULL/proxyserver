@@ -1,0 +1,7 @@
+#proxy server port
+SERVERPORT = 1234
+
+#rootca 인증서, 키 파일 경로
+CERT_FILE = /home/sgseo/proxyserver/certificate.pem
+KEY_FILE = /home/sgseo/proxyserver/private_key.pem
+
