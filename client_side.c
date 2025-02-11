@@ -126,9 +126,12 @@ int main(void) {
                     task->remote_ssl = NULL;
                     task->remote_side_https = false;
                     task->buffer_len = 0;
+                    task->request_buffer_size = MAX_BUFFER_SIZE;
+                    task->request_buffer = (char*)malloc(task->request_buffer_size);
                     task->state = STATE_INITIAL_READ;
+                    task->req_method = DEFAULT;
 
-                    ev.events = EPOLLIN | EPOLLET;
+                    ev.events = EPOLLIN;
                     ev.data.ptr = task;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
@@ -136,15 +139,22 @@ int main(void) {
                 task_t* task = (task_t*)events[i].data.ptr;
 
                 if (!task) continue; // 안전 검사
-                if(task->state == STATE_INITIAL_READ){
+                if(task->state == STATE_INITIAL_READ) {
                     LOG(INFO,  ">> STATE_INITIAL_READ <<");
                     int ret = initial_read(task);
                 }
                 if (task->state == STATE_CLIENT_READ) {
                     LOG(INFO,  ">> STATE_CLIENT_READ <<");
-                    int ret = client_read(task, epoll_fd, &ev);    
-                } 
-                else if (task->state == STATE_CLIENT_WRITE) 
+                    int ret = client_read(task, epoll_fd, &ev);
+
+                    if (ret != STAT_OK) continue;
+                }
+                else if (task->state == STATE_CLIENT_REQ_PARSE) 
+                {
+                    LOG(INFO,  ">> STATE_CLIENT_REQ_PARSE <<");
+                    int ret = client_req_parse(task, epoll_fd, &ev);
+                }
+                else if (task->state == STATE_CLIENT_WRITE)
                 {
                     LOG(INFO,  ">> STATE_CLIENT_WRITE <<");
                     int ret = client_write(task, epoll_fd, &ev);

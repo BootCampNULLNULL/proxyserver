@@ -193,6 +193,8 @@ int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const ch
  * @return int 
  * 성공(0), 실패(others)
  */
+
+
 int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx, SSL** ssl)
 {
     // 동적 키 생성 및 인증서 생성
@@ -209,8 +211,8 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
         return -1;
     }
     
-    const char *cert_file = "/home/sgseo/proxyserver/dynamic_cert.pem";
-    const char *key_file = "/home/sgseo/proxyserver/dynamic_key.pem";
+    const char *cert_file = "/home/ubuntu/securezone/dynamic_cert.pem";
+    const char *key_file = "/home/ubuntu/securezone/dynamic_key.pem";
 
     if (!save_cert_and_key(dynamic_cert, key, cert_file, key_file)) {
         EVP_PKEY_free(key);

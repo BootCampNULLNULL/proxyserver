@@ -14,6 +14,7 @@ typedef enum task_state_t {
     STATE_CLIENT_CONNECT_REQ, //CLIENT<-http->PROXY<-https->REMOTE, CONNECT 요청
     STATE_CLIENT_CONNECT_REQ_WITH_SSL, //CLIENT<-https->PROXY<-https->REMOTE, 암호화된 CONNECT 요청
     STATE_CLIENT_READ,
+    STATE_CLIENT_REQ_PARSE,
     STATE_CLIENT_WRITE,
     STATE_REMOTE_READ,
     STATE_REMOTE_WRITE,
@@ -39,7 +40,12 @@ typedef struct task_t {
     SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     BIO* sbio;
+    
     char buffer[MAX_BUFFER_SIZE];
+    char* request_buffer;
+    int request_buffer_size;
+    Req_Method_State req_method;
+
     int buffer_len;
     HTTPRequest* req;
     task_state_t state;

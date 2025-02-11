@@ -1,7 +1,7 @@
 #proxy server port
-SERVERPORT = 1234
+SERVERPORT = 5051
 
 #rootca 인증서, 키 파일 경로
-CERT_FILE = /home/sgseo/proxyserver/certificate.pem
-KEY_FILE = /home/sgseo/proxyserver/private_key.pem
+CERT_FILE = /home/ubuntu/securezone/certificate.pem
+KEY_FILE = /home/ubuntu/securezone/private_key.pem
 

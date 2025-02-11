@@ -9,9 +9,23 @@
 
 #define str3_cmp(m, c0, c1, c2) m[0] == c0 && m[1] == c1 && m[2] == c2
 #define str4_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3
-#define str7_cmp(m, c0, c1, c2, c3) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3 && m[4] == c4 && m[5] == c5 && m[6] == c6
+#define str7_cmp(m, c0, c1, c2, c3 ,c4, c5, c6) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3 && m[4] == c4 && m[5] == c5 && m[6] == c6
+#define str6_cmp(m, c0, c1, c2, c3 ,c4, c5) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3 && m[4] == c4 && m[5] == c5
+#define str5_cmp(m, c0, c1, c2, c3 ,c4) m[0] == c0 && m[1] == c1 && m[2] == c2 && m[3] == c3 && m[4] == c4
 
 //////////////////////////////////////
+typedef enum Req_Method_State {
+    STATE_GET,
+    STATE_POST,
+    STATE_PUT,
+    STATE_HEAD,
+    STATE_CONNECT,
+    STATE_OPTIONS,
+    STATE_DELETE,
+    STATE_TRACE,
+    DEFAULT
+} Req_Method_State;
+
 typedef struct HTTPHeaderField {
     char *name;
     char *value;
