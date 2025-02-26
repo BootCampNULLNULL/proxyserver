@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <time.h>
-#include <string.h>
 
 #include "log.h"
 
@@ -34,10 +30,41 @@ void log_message(LogLevel level, const char *file, int line, const char *format,
     char log_file[20];
     char log_msg[MAX_LOG_MESSAGE];
     // 
-    time_t now  = time(NULL);
-    struct tm *t = localtime(&now);
-    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", t);
-    strftime(log_file, sizeof(log_file), "%Y-%m-%d", t);
+
+    /*
+    time_t t;
+    struct tm lt;
+    
+    if((t = time(NULL)) == -1) {
+        perror("time() call error");
+        return -1;
+    }
+
+    if(localtime_r(&t, &lt) == NULL) {
+        perror("localtime_r() call error");
+        return -1;
+    }
+
+
+    */
+    // time_t now  = time(NULL);
+    // struct tm *t = localtime(&now);
+
+    time_t now;
+    struct tm t;
+    if((now = time(NULL)) == -1) {
+        perror("time() call error");
+        return -1;
+    }
+
+    if(localtime_r(&now, &t) == NULL) {
+        perror("localtime_r() call error");
+        return -1;
+    }
+
+
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &t);
+    strftime(log_file, sizeof(log_file), "%Y-%m-%d", &t);
     sprintf(log_file+strlen(log_file),"_log");
     init_log_file(log_file);
     va_list args;

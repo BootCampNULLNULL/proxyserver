@@ -28,24 +28,20 @@
 #include "errcode.h"
 #include "log.h"
 #include "config_parser.h"
+#include "util.h"
 
 EVP_PKEY *ca_key=NULL;
 X509 *ca_cert=NULL;
+int serverport;
+int timeout = 0;
 
 int main(void) {
 
-    initialize_openssl();
 
-    if(load_config()!=STAT_OK)
-    {
-        LOG(ERROR, "config load error");
+    if(init_proxy()!=STAT_OK){
+        LOG(ERROR, "proxy init fail");
     }
 
-    const char *cert_file = get_config_string("CERT_FILE");
-    const char *key_file = get_config_string("KEY_FILE");
-    int serverport = get_config_int("SERVERPORT");
-    ca_key = load_private_key(key_file);
-    ca_cert = load_certificate(cert_file);
     if (!ca_key || !ca_cert) {
         fprintf(stderr, "Failed to load CA key or certificate\n");
         exit(EXIT_FAILURE);
@@ -127,21 +123,29 @@ int main(void) {
                     task->remote_side_https = false;
                     task->buffer_len = 0;
                     task->state = STATE_INITIAL_READ;
-
-                    ev.events = EPOLLIN | EPOLLET;
+                    task->auth = false;
+                    ev.events = EPOLLIN ;
                     ev.data.ptr = task;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
             } else {
                 task_t* task = (task_t*)events[i].data.ptr;
+                // char strTmp[1000] = {0,};
+                // ssize_t buf_size = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
+                // memset(strTmp,0,sizeof(strTmp));
+                // if(task->remote_fd > 3){
+                //     ssize_t buf_size2 = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
+                //     if(buf_size == 0  && buf_size2 == 0)
+                //         continue;         
+                // }       
 
                 if (!task) continue; // 안전 검사
                 if(task->state == STATE_INITIAL_READ){
-                    LOG(INFO,  ">> STATE_INITIAL_READ <<");
+                    LOG(INFO,  ">> STATE_INITIAL_READ fd[%d]<<", task->client_fd);
                     int ret = initial_read(task);
                 }
                 if (task->state == STATE_CLIENT_READ) {
-                    LOG(INFO,  ">> STATE_CLIENT_READ <<");
+                    LOG(INFO,  ">> STATE_CLIENT_READ fd[%d]<<",task->client_fd);
                     int ret = client_read(task, epoll_fd, &ev);    
                 } 
                 else if (task->state == STATE_CLIENT_WRITE) 

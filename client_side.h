@@ -8,6 +8,7 @@
 #define KEY_FILE  "/home/sgseo/proxyserver/private_key.pem"  // 키 파일 경로
 #define MAX_BUFFER_SIZE 4096
 #include "http.h"
+#include "util.h"
 
 typedef enum task_state_t {
     STATE_INITIAL_READ, //CLIENT<->PROXY 프로토콜 파싱
@@ -44,6 +45,7 @@ typedef struct task_t {
     HTTPRequest* req;
     task_state_t state;
     bool auth;
+    time_t current_time;
 } task_t;
 
 // void set_nonblocking(int fd);
