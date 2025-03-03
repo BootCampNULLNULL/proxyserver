@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
 LDFLAGS = -lssl -lcrypto
 TARGET = test_proxy
 INCLUDES = -I./
-SRC = client_side.c http.c ssl_conn.c net.c log.c config_parser.c
+SRC = client_side.c http.c ssl_conn.c net.c log.c config_parser.c util.c
 OBJ = $(SRC:.c=.o)
 
 all: $(TARGET)

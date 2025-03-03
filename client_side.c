@@ -21,6 +21,7 @@
 #include <openssl/rsa.h>
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
+#include <pthread.h>
 #include "http.h"
 #include "ssl_conn.h"
 #include "client_side.h"
@@ -28,24 +29,22 @@
 #include "errcode.h"
 #include "log.h"
 #include "config_parser.h"
+#include "util.h"
 
 EVP_PKEY *ca_key=NULL;
 X509 *ca_cert=NULL;
+int serverport;
+int timeout = 0;
+EVP_PKEY *ssl_key=NULL;
+
 
 int main(void) {
 
-    initialize_openssl();
 
-    if(load_config()!=STAT_OK)
-    {
-        LOG(ERROR, "config load error");
+    if(init_proxy()!=STAT_OK){
+        LOG(ERROR, "proxy init fail");
     }
 
-    const char *cert_file = get_config_string("CERT_FILE");
-    const char *key_file = get_config_string("KEY_FILE");
-    int serverport = get_config_int("SERVERPORT");
-    ca_key = load_private_key(key_file);
-    ca_cert = load_certificate(cert_file);
     if (!ca_key || !ca_cert) {
         fprintf(stderr, "Failed to load CA key or certificate\n");
         exit(EXIT_FAILURE);
@@ -68,7 +67,7 @@ int main(void) {
         close(server_fd);
         exit(EXIT_FAILURE);
     }
-    listen(server_fd, 10);
+    listen(server_fd, 4096);
 
     // epoll 인스턴스 생성
     int epoll_fd = epoll_create1(0);
@@ -80,7 +79,7 @@ int main(void) {
 
     // 서버 소켓을 epoll에 등록
     struct epoll_event ev, events[MAX_EVENTS];
-    ev.events = EPOLLIN;
+    ev.events = EPOLLIN|EPOLLRDHUP;
     ev.data.fd = server_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ev) == -1) {
         perror("Epoll control failed");
@@ -104,6 +103,7 @@ int main(void) {
                     struct sockaddr_in cliaddr;
                     socklen_t len = sizeof(cliaddr);
                     int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
+                    LOG(INFO, "new accept client fd[%d]",client_fd);
                     if(client_fd < 0) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK) {
                             // 모든 연결이 처리됨
@@ -127,8 +127,8 @@ int main(void) {
                     task->remote_side_https = false;
                     task->buffer_len = 0;
                     task->state = STATE_INITIAL_READ;
-
-                    ev.events = EPOLLIN | EPOLLET;
+                    task->auth = false;
+                    ev.events = EPOLLIN|EPOLLRDHUP;
                     ev.data.ptr = task;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
@@ -137,31 +137,60 @@ int main(void) {
 
                 if (!task) continue; // 안전 검사
                 if(task->state == STATE_INITIAL_READ){
-                    LOG(INFO,  ">> STATE_INITIAL_READ <<");
+                    
                     int ret = initial_read(task);
+                    if(ret == STAT_FAIL){
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                        close(task->client_fd);
+                    }
+                    LOG(INFO,  ">> STATE_INITIAL_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
                 }
                 if (task->state == STATE_CLIENT_READ) {
-                    LOG(INFO,  ">> STATE_CLIENT_READ <<");
+                    int result = 0;
+                    char strTmp[MAX_BUFFER_SIZE] = {0,};
+                    result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
+                    if(result<=0)
+                        continue;
+                    LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]<<",task->client_fd,task->remote_fd, event_count);
                     int ret = client_read(task, epoll_fd, &ev);    
                 } 
                 else if (task->state == STATE_CLIENT_WRITE) 
                 {
-                    LOG(INFO,  ">> STATE_CLIENT_WRITE <<");
+                    LOG(INFO,  ">> STATE_CLIENT_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
                     int ret = client_write(task, epoll_fd, &ev);
                 }
                 else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
-                    LOG(INFO,  ">> STATE_REMOTE_READ <<");
+                    int result = 0;
+                    char strTmp[MAX_BUFFER_SIZE] = {0,};
+                    result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
+                    if(result<=0)
+                        continue;
+                    LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
+#if 1
+                    task_arg *arg = (task_arg*)calloc(1,sizeof(task_arg));
+                    arg->task = (task_t*)calloc(1,sizeof(task_t));
+                    memcpy(arg->task, task, sizeof(task_t));
+                    arg->epoll_fd = epoll_fd;
+                    arg->ev = &ev;
+                    pthread_t thread;
+
+                    pthread_create(&thread, NULL, remote_read_process, arg);
+                    pthread_detach(thread);
+                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+#else
                     int ret = remote_read(task, epoll_fd, &ev);
+#endif
+
                 } 
                 else if (task->state == STATE_REMOTE_WRITE) {
-                    LOG(INFO,  ">> STATE_REMOTE_WRITE <<");
+                    LOG(INFO,  ">> STATE_REMOTE_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
                     int ret = remote_write(task, epoll_fd, &ev);  
                 } 
                 else if (task->state == STATE_CLIENT_PROXY_SSL_CONN)
                 {
-                    LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN <<");
+                    LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
                     int ret = client_proxy_ssl_conn(task, epoll_fd, &ev);
                 }
             }

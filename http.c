@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include "http.h"
 #include "errcode.h"
+#include "log.h"
 
 char *trim_whitespace(char *str) {
     char *end;
@@ -89,8 +90,9 @@ void read_request_line(const char *buffer, HTTPRequest *request) {
         request->protocol_minor_version = version[7] - '0';
     } else {
         fprintf(stderr, "지원되지 않는 HTTP 버전\n");
+        LOG(INFO, "지원되지 않는 HTTP 버전 [%s]",version);
         free(line);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE);
     }
 
     free(line);
@@ -133,12 +135,12 @@ HTTPRequest *read_request(const char *buffer) {
 
     const char *current = buffer;
     char line[MAX_LINE_SIZE];
-
+    LOG(INFO, "read request : %s",buffer);
     // 요청 라인 파싱
     const char *line_end = strstr(current, "\r\n");
     if (!line_end) {
-        fprintf(stderr, "잘못된 HTTP 요청\n");
-        exit(EXIT_FAILURE);
+        LOG(ERROR, "잘못된 HTTP 요청\n");
+        return NULL;
     }
     size_t line_length = line_end - current;
     strncpy(line, current, line_length);
@@ -268,7 +270,7 @@ int get_IP(char* ip_str, const char* hostname, int port) {
 
     // IP 주소를 문자열로 변환
     inet_ntop(res->ai_family, addr, ip_str, INET_ADDRSTRLEN);
-    printf("  %s: %s\n", ipver, ip_str);
+    LOG(DEBUG,"  %s: %s\n", ipver, ip_str);
 
     freeaddrinfo(res);
     return 0;
