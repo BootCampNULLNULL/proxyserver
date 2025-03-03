@@ -166,9 +166,6 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
         LOG(ERROR, "X509_NAME_new error ");
     }
     // 주체 이름에 도메인 정보 추가
-    //X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned char *)"CA", -1, -1, 0);
-    // X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC,  (unsigned char*)"KR", -1, -1, 0);
-    // X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC,  (unsigned char*)"Proxy test Corp.", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char*)common_name, -1, -1, 0);
     // 인증서에 적용
     X509_set_subject_name(cert, name);
@@ -181,12 +178,12 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
         if(add_ext(ca_cert, cert, NID_key_usage, "critical,digitalSignature,keyCertSign,cRLSign")!=STAT_OK)
         {
             LOG(ERROR,"X509 add_ext fail");
-            return STAT_FAIL;
+            return NULL;
         }
         if(add_ext(ca_cert, cert,  NID_basic_constraints, "critical,CA:TRUE")!=STAT_OK)
         {
             LOG(ERROR,"X509 add_ext fail");
-            return STAT_FAIL;
+            return NULL;
         }
 
     }
@@ -198,12 +195,12 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
         if(add_ext(ca_cert, cert, NID_key_usage, "critical,digitalSignature")!=STAT_OK)
         {
             LOG(ERROR,"X509 add_ext fail");
-            return STAT_FAIL;
+            return NULL;
         }
         if(add_ext(ca_cert, cert,  NID_basic_constraints, "critical,CA:FALSE")!=STAT_OK)
         {
             LOG(ERROR,"X509 add_ext fail");
-            return STAT_FAIL;
+            return NULL;
         }
 
         char san_field[100]={0,};
@@ -218,28 +215,12 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
             // sprintf(san_field, "DNS:%s",common_name);
         }
         LOG(INFO, "domain: %s", san_field);
-        // X509_EXTENSION *san = NULL;
-        // ASN1_OCTET_STRING *san_ASN1 = NULL;
-        // san_ASN1 = ASN1_OCTET_STRING_new(); //에러 처리 필요, free 필요
-        // ASN1_OCTET_STRING_set(san_ASN1, (const unsigned char*) san_field, strlen(san_field));
-        // X509_EXTENSION_create_by_NID(&san, NID_subject_alt_name, 0, san_ASN1);
-       
-        // X509V3_CTX ctx;
-        // X509V3_set_ctx(&ctx, ca_cert, cert, NULL, NULL, 0);
 
-        // X509_EXTENSION *san;
-        // // san = X509V3_EXT_conf_nid(NULL, &ctx, NID_subject_alt_name, (const char*)san_field);
-        // //NID_basic_constraints, "CA:FALSE"
-        // san = X509V3_EXT_conf_nid(NULL, &ctx, NID_subject_alt_name,  (const char*)san_field);
-        // if(!san)
-        //     LOG(ERROR, "X509V3_EXT_conf_nid error");
-        // X509_add_ext(cert, san, -1);
-        // // X509_EXTENSION_free(san);
 
         if(add_ext(ca_cert, cert, NID_subject_alt_name, (const char*)san_field)!=STAT_OK)
         {
             LOG(ERROR,"X509 add_ext fail");
-            return STAT_FAIL;
+            return NULL;
         }
         
         // X509_add_ext(cert, san, -1);
