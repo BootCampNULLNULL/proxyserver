@@ -8,12 +8,14 @@ int handle_recv_error(int sockfd);
 int initial_read(task_t* task);
 int recv_data(task_t* task, int epoll_fd, struct epoll_event* ev);
 
-int connect_remote_http(const char* hostname, int port);
+int connect_remote_http(HTTPString hostname, int port);
 SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx);
 void log_exit(const char *fmt, ...);
 void* xmalloc(size_t sz);
 void set_nonblocking(int fd);
 void free_task(task_t* task, const int p_epoll_fd);
+task_t* create_task(void);
+
 int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev);
 int client_proxy_ssl_conn(task_t* task, int epoll_fd, struct epoll_event *ev);
 int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *ev);

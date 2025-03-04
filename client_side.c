@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
-#include <netinet/in.h>
+#include <netinet/in.h>    
 #include <fcntl.h>
 #include <errno.h>
 #include <netdb.h>
@@ -115,22 +115,9 @@ int main(void) {
                     }
                     set_nonblocking(client_fd);
 
-                    task_t* task = (task_t*)malloc(sizeof(task_t));
+                    task_t* task = create_task();
                     
                     task->client_fd = client_fd;
-                    task->client_side_https = false;
-                    task->client_ssl = NULL;
-                    task->client_ctx = NULL;
-                    task->remote_fd = -1;
-                    task->remote_ctx = NULL;
-                    task->remote_ssl = NULL;
-                    task->remote_side_https = false;
-                    task->buffer_len = 0;
-                    task->request_buffer_size = MAX_BUFFER_SIZE;
-                    task->request_buffer = (char*)malloc(task->request_buffer_size);
-                    task->state = STATE_INITIAL_READ;
-                    task->req_method = DEFAULT;
-
                     ev.events = EPOLLIN;
                     ev.data.ptr = task;
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
@@ -164,11 +151,11 @@ int main(void) {
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
                     LOG(INFO,  ">> STATE_REMOTE_READ <<");
                     int ret = remote_read(task, epoll_fd, &ev);
-                } 
+                }
                 else if (task->state == STATE_REMOTE_WRITE) {
                     LOG(INFO,  ">> STATE_REMOTE_WRITE <<");
                     int ret = remote_write(task, epoll_fd, &ev);  
-                } 
+                }
                 else if (task->state == STATE_CLIENT_PROXY_SSL_CONN)
                 {
                     LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN <<");

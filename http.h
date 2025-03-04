@@ -26,41 +26,47 @@ typedef enum Req_Method_State {
     DEFAULT
 } Req_Method_State;
 
+typedef struct HTTPString {
+    char *start;
+    size_t length;
+} HTTPString;
+
 typedef struct HTTPHeaderField {
-    char *name;
-    char *value;
+    HTTPString name;
+    HTTPString value;
     struct HTTPHeaderField *next;
 } HTTPHeaderField;
 
-// HTTP 쿼리 파라미터를 나타내는 구조체
 typedef struct HTTPQueryParam {
-    char *name;
-    char *value;
+    HTTPString name;
+    HTTPString value;
     struct HTTPQueryParam *next;
 } HTTPQueryParam;
 
-// HTTP 요청 데이터를 나타내는 구조체
 typedef struct HTTPRequest {
     int protocol_minor_version;
-    char *method;
-    char *path;
+    HTTPString method;
+    HTTPString path;
     int port;
-    char* host;
-    struct HTTPQueryParam *query;
-    struct HTTPHeaderField *header;
-    char *body;
+    HTTPString host;
+    HTTPQueryParam *query;
+    HTTPHeaderField *header;
+    HTTPString body;
     long length;
 } HTTPRequest;
-/////////////////////////////////////
 
 char *trim_whitespace(char *str);
-void parse_query_params(char *query_string, HTTPRequest *request);
+void parse_query_params(char *query_start, size_t length, HTTPRequest *request);
 void read_request_line(const char *buffer, HTTPRequest *request);
-void read_header_field(const char *buffer, HTTPRequest *request);
+void read_header_field(const char *line, size_t length, HTTPRequest *request);
+void parse_host_and_port(HTTPRequest *request);
+
 HTTPRequest *read_request(const char *buffer);
+char *HTTPString_to_value(HTTPString str);
+void free_request(HTTPRequest *request);
+
 char* find_Host_field(HTTPHeaderField* head);
 int find_port(char* host);
-void free_request(HTTPRequest *request);
 int get_IP(char* ip_str, const char* hostname, int port);
 
 #endif //HTTP

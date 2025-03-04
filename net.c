@@ -27,6 +27,7 @@
 #include "net.h"
 #include "errcode.h"
 #include "log.h"
+#include "sc_mem_pool.h"
 extern EVP_PKEY *ca_key;
 extern X509 *ca_cert;
 
@@ -78,10 +79,51 @@ void set_nonblocking(int fd)
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
+task_t* create_task(void) {
+    
+    task_t* task = (task_t*)malloc(sizeof(task_t));
+                    
+    task->client_fd = -1;
+    task->client_side_https = false;
+    task->remote_side_https = false;
+    task->client_ssl = NULL;
+    task->client_ctx = NULL;
+    task->before_client_ctx = NULL;
+    task->before_client_ssl = NULL;
+    task->remote_fd = -2;
+    task->remote_ctx = NULL;
+    task->remote_ssl = NULL;
+    task->sbio = NULL;
+    
+    task->pool = sc_create_pool(MAX_BUFFER_SIZE);
+    task->buffer = NULL;
+    // if (task->buffer == NULL) {
+    //     task->buffer = sc_palloc(task->pool, MAX_BUFFER_SIZE);
+    //     if (!task->buffer) {
+    //         perror("메모리 풀에서 버퍼 할당 실패");
+    //         return -1;
+    //     }
+    // }
+
+    
+    task->buffer_len = 0;
+    task->request_buffer_size = MAX_BUFFER_SIZE;
+
+    // task->request_buffer = (char*)malloc(task->request_buffer_size);
+    task->state = STATE_INITIAL_READ;
+    task->req = NULL;
+    task->req_method = DEFAULT;
+    task->sent_bytes = 0;
+    task->auth = false;
+
+    return task;
+}
+
 void free_task(task_t* task, const int p_epoll_fd) {
     if(task->req != NULL) {
         free_request(task->req);
     }
+
     // if(task->request_buffer != NULL) {
     //     free(task->request_buffer);
     // }
@@ -89,6 +131,12 @@ void free_task(task_t* task, const int p_epoll_fd) {
     // if(task->response_buffer != NULL) {
     //     free(task->response_buffer);
     // }
+
+    if(task->before_client_ssl != NULL) {
+        BIO_free(task->sbio);
+        SSL_free(task->before_client_ssl);
+        SSL_CTX_free(task->before_client_ctx);
+    }
 
     if(task->client_ssl != NULL) {
         SSL_free(task->client_ssl);
@@ -119,12 +167,12 @@ void free_task(task_t* task, const int p_epoll_fd) {
  * @param port 
  * @return int file descriptor
  */
-int connect_remote_http(const char* hostname, int port)
+int connect_remote_http(HTTPString hostname, int port)
 {
-
+    char* r_hostname = HTTPString_to_value(hostname);
     struct hostent *host;
-    if((host = gethostbyname(hostname)) == NULL) {
-        perror(hostname);
+    if((host = gethostbyname(r_hostname)) == NULL) {
+        perror(r_hostname);
         abort();
     }
 
@@ -205,7 +253,7 @@ int is_tls_handshake(const char *data)
     //Content Type: Handshake (22,0x16)) - payload 시작 데이터
     //Version: TLS 1.0 (0x0301) - 호환성 보장을 위해 TLS 1.0(0x0301) 또는 SSL 3.0(0x0300) 설정, 실제 사용하는 TLS 버전과 무관
     if (data[0] == 0x16 && data[1] == 0x03 && data[2] >= 0x01) {
-        return 1; 
+        return 1;
     }
     return 0;
 }
@@ -268,13 +316,11 @@ int check_req_method(task_t* task) {
         printf("Invalid Request Method\n");
         return -1;
     }
-
-
 }
 
 int initial_read(task_t* task)
 {
-
+    task->buffer = sc_palloc(task->pool, MAX_BUFFER_SIZE);
     ssize_t buf_size = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, MSG_PEEK);
 
     if(handle_recv_error(task->client_fd)!=STAT_OK)
@@ -319,33 +365,44 @@ int initial_read(task_t* task)
     return STAT_OK;
 }
 
+
 int release(task_t* task, int epoll_fd){
     
     return STAT_OK;
 }
 
+
 int recv_data(task_t* task, int epoll_fd, struct epoll_event* ev)
 {
 // 클라이언트 데이터 수신
-    memset(task->buffer, 0, MAX_BUFFER_SIZE);
+    if (task->buffer == NULL) {
+        task->buffer = sc_palloc(task->pool, MAX_BUFFER_SIZE);
+        if (!task->buffer) {
+            perror("메모리 풀에서 버퍼 할당 실패");
+            return -1;
+        }
+    }
     
     // client 요청 recv
-    int ret = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+    int ret = recv(task->client_fd, task->buffer + task->buffer_len, MAX_BUFFER_SIZE, 0);
 
     if (ret > 0) {
-        // MAX_BUFFER_SIZE 
-        if (ret < MAX_BUFFER_SIZE) {
-            task->buffer_len = task->buffer_len + ret;
-            // task->state = STATE_CLIENT_REQ_PARSE;
+        task->buffer_len += ret;
 
-            // ev->events = EPOLLOUT;
-            // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
-            return STAT_OK;
-        } else if (ret == MAX_BUFFER_SIZE) {
-            // 버퍼 늘림
-            return STAT_OK;
+        // 버퍼가 가득 찼을 때, 추가 메모리 할당
+        if (task->buffer_len >= task->pool->pool_size) {
+            sc_palloc(task->pool, MAX_BUFFER_SIZE);  // 새 풀 할당
+            printf("추가 메모리 할당 (버퍼 크기 증가)\n");
         }
-        
+
+        // 요청 처리 준비 완료
+        if (ret < MAX_BUFFER_SIZE) {
+            task->state = STATE_CLIENT_REQ_PARSE;
+            ev->events = EPOLLOUT;
+            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
+        }
+
+        return STAT_OK;
     } else if (ret == 0) {
         // 클라이언트 연결 종료
         printf("Client disconnected\n");
@@ -353,25 +410,74 @@ int recv_data(task_t* task, int epoll_fd, struct epoll_event* ev)
         return -2;
     } else {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            // 읽을 데이터가 더 이상 없음
-            if(task->buffer_len > 0) {  // 데이터를 읽고 더이상 읽을게 없는 경우
+            // 더 이상 읽을 데이터가 없음
+            if (task->buffer_len > 0) {
                 task->state = STATE_CLIENT_REQ_PARSE;
                 ev->events = EPOLLOUT;
                 epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
                 return STAT_OK;
             }
-            return STAT_EAGAIN;         // 소켓에 데이터가 아직 안 온 경우
+            return STAT_EAGAIN;
         } else {
-            // recv 실패
+            // 수신 실패
             perror("recv failed");
             free_task(task, epoll_fd);
             return -3;
         }
     }
-    return STAT_OK;
 
+    return STAT_OK;
 }
 
+
+
+// int recv_data(task_t* task, int epoll_fd, struct epoll_event* ev)
+// {
+// // 클라이언트 데이터 수신
+//     memset(task->buffer, 0, MAX_BUFFER_SIZE);
+    
+//     // client 요청 recv
+//     int ret = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+
+//     if (ret > 0) {
+//         // MAX_BUFFER_SIZE 
+//         if (ret < MAX_BUFFER_SIZE) {
+//             task->buffer_len = task->buffer_len + ret;
+//             // task->state = STATE_CLIENT_REQ_PARSE;
+
+//             // ev->events = EPOLLOUT;
+//             // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
+//             return STAT_OK;
+//         } else if (ret == MAX_BUFFER_SIZE) {
+//             // 버퍼 늘림
+//             return STAT_OK;
+//         }
+        
+//     } else if (ret == 0) {
+//         // 클라이언트 연결 종료
+//         printf("Client disconnected\n");
+//         free_task(task, epoll_fd);
+//         return -2;
+//     } else {
+//         if (errno == EAGAIN || errno == EWOULDBLOCK) {
+//             // 읽을 데이터가 더 이상 없음
+//             if(task->buffer_len > 0) {  // 데이터를 읽고 더이상 읽을게 없는 경우
+//                 task->state = STATE_CLIENT_REQ_PARSE;
+//                 ev->events = EPOLLOUT;
+//                 epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
+//                 return STAT_OK;
+//             }
+//             return STAT_EAGAIN;         // 소켓에 데이터가 아직 안 온 경우
+//         } else {
+//             // recv 실패
+//             perror("recv failed");
+//             free_task(task, epoll_fd);
+//             return -3;
+//         }
+//     }
+//     return STAT_OK;
+
+// }
 
 /**
  * @brief http 프로토콜로 client data read
@@ -388,7 +494,7 @@ int client_req_parse(task_t* task, int epoll_fd, struct epoll_event *ev)
     task->req = read_request(task->buffer);
 
     //method CONNECT 일때
-    if(!strncmp(task->req->method,"CONNECT", 7)){
+    if(!strncmp(task->req->method.start,"CONNECT", 7)){
         return client_connect_req(task, epoll_fd, ev);
     }
 
@@ -428,8 +534,13 @@ int client_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
 
         task->state = STATE_CLIENT_REQ_PARSE;
 
+        
         ev->events = EPOLLOUT;
+        
+        //
         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
+        //
+        
         return STAT_OK;
     }
     
@@ -489,7 +600,7 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
     free_request(task->req);
     task->req = read_request(task->buffer);
 
-    if(!strncmp(task->req->method,"CONNECT",7))
+    if(!strncmp(task->req->method.start,"CONNECT",7))
     {
         //client <-https-> proxy <-https-> remote인 경우
         //SSL 암호화 연결 상태에서 CONNECT method 처리
@@ -584,6 +695,49 @@ int remote_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
     
     memset(task->buffer, 0, MAX_BUFFER_SIZE);
     task->buffer_len = 0;
+    // int ret = recv(task->remote_fd, task->buffer, MAX_BUFFER_SIZE, 0);
+    // LOG(INFO,"remote read result: %d", ret);
+    // if (ret > 0) {
+    //     //TO-DO 호출 함수 수정 필요
+
+    //     int ret2;
+    //     if(task->client_side_https) ret2 = SSL_write(task->client_ssl, task->buffer,ret);
+    //     else ret2 = send(task->client_fd, task->buffer,ret,0);
+    //     task->buffer_len = task->buffer_len + ret;
+
+    // } else if (ret == 0) {
+    //     // remote 연결 종료
+    //     printf("remote disconnected\n");
+    //     if (task->buffer_len == 0) {    // 클라이언트에 응답 전송 전에 remote 연결이 끊겼을때
+    //         free_task(task, epoll_fd);
+    //         return -1;
+    //     } else {
+    //         free_task(task, epoll_fd);
+    //         return -1;
+    //     }
+    // } else {
+    //     if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    //         // 읽을 데이터가 더 이상 없음
+    //         // sgseo TO-DO 데이터를 다 읽어서 읽을 데이터가 없는 상황일 수 있는데,, 그럴때는 어떻게 해야되는지 처리 필요
+    //         if (task->buffer_len > 0) {
+    //             printf("Remote to Client Send Success\n");
+    //             free_task(task, epoll_fd);
+    //         }
+    //         printf("No data to read on remote read with http\n");
+    //         ev->events = EPOLLIN;
+    //         ev->data.ptr = task;
+    //         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+    //     } else {
+    //         // recv 실패
+    //         perror("recv failed");
+    //         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+    //         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+    //         close(task->client_fd);
+    //         close(task->remote_fd);
+    //         free(task);
+    //         exit(1);
+    //     }
+    // }
     while (1) {
         int ret = recv(task->remote_fd, task->buffer, MAX_BUFFER_SIZE, 0);
         LOG(INFO,"remote read result: %d", ret);
@@ -732,8 +886,39 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
 int remote_write_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
 {
     // 원격 서버로 데이터 송신
+    // ssize_t ret = send(task->remote_fd, task->buffer + task->sent_bytes, task->buffer_len, 0);
+    // if (ret > 0) {
+    //     if(ret == task->buffer_len) {   // send 완료
+    //         task->sent_bytes = 0;
+    //         task->state = STATE_REMOTE_READ;
+    //         ev->events = EPOLLIN;
+    //         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+    //         return STAT_OK;
+    //     } else {    // send 미완료
+    //         task->buffer_len = task->buffer_len - ret;   // 전송한 만큼 차감
+    //         task->sent_bytes = task->sent_bytes + ret;   // 전송한 만큼 버퍼 이동 후 send
+    //         return -1;
+    //     }
+    // } else if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) { // 소켓에 버퍼 준비 안됨
+    //     if (errno == EAGAIN || EWOULDBLOCK ) {
+    //         printf("Send buffer full, waiting for EPOLLOUT event...\n");
+    //         ev->events = EPOLLOUT;
+    //         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+    //         return -1;
+    //     } else if (errno == EPIPE) {
+    //         printf("Broken pipe: Connection closed by peer.\n");
+    //         exit(1);
+    //     } else {
+    //         perror("send failed");
+    //         exit(1);
+    //     }
+    // } else {
+    //     // send 실패 처리
+    //     perror("send failed");
+    //     exit(1);
+    // }
+
     ssize_t sent_bytes = 0;
-    
     while (task->buffer_len > 0) {
         ssize_t ret = send(task->remote_fd, task->buffer + sent_bytes, task->buffer_len, 0);
         if (ret > 0) {
@@ -766,7 +951,6 @@ int remote_write_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
             exit(1);
         }
     }
-    
 }
 
 /**
@@ -883,7 +1067,7 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
 #endif
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     send(task->client_fd, response, strlen(response), 0);
-    if(setup_ssl_cert(task->req->host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
+    if(setup_ssl_cert(task->req->host.start, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
     SSL_set_fd(task->client_ssl, task->client_fd);
@@ -924,9 +1108,9 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     task->client_side_https = true;
     task->remote_side_https = true;
 
-    printf("Host: %s\n", task->req->host); // 호스트 이름 출력
-    printf("Port: %d\n", task->req->port); // 포트 출력
-    printf("CONNECT request for %s:%d\n", task->req->host, task->req->port);
+    // printf("Host: %s\n", task->req->host); // 호스트 이름 출력
+    // printf("Port: %d\n", task->req->port); // 포트 출력
+    // printf("CONNECT request for %s:%d\n", task->req->host, task->req->port);
 #if 0 /*TO-DO 인증 방식 추가*/
     // client HTTP/1.1 RFC 7235 (Authentication) 
     const char *response = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"My Proxy Server\"\r\nContent-Length: 0\r\n\r\n";
@@ -938,7 +1122,7 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     // client ssl 연결
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     SSL_write(task->before_client_ssl, response, strlen(response));
-    if(setup_ssl_cert(task->req->host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
+    if(setup_ssl_cert(task->req->host.start, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
     task->sbio = BIO_new(BIO_f_ssl());  // SSL BIO 객체 생성

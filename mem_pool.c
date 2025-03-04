@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PROXY_BUFFER_SIZE 16  // 첫 번째 버퍼 크기
-#define PROXY_BUFFER_EXTRA_SIZE 32 // 추가 버퍼 크기
-#define NGX_POOL_SIZE 64  // 작은 크기로 설정하여 추가 풀 생성 테스트
+#define PROXY_BUFFER_SIZE 4096  // 첫 번째 버퍼 크기
+#define PROXY_BUFFER_EXTRA_SIZE 8192 // 추가 버퍼 크기
+#define NGX_POOL_SIZE 16384  // 작은 크기로 설정하여 추가 풀 생성 테스트
 #define EXTRA_BUFFER_INIT_SIZE 4  // 초기 추가 버퍼 배열 크기
 
 // 요청별 메모리 풀 구조체

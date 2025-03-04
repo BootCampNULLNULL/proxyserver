@@ -30,247 +30,151 @@ char *trim_whitespace(char *str) {
 }
 
 // 쿼리 파라미터를 파싱하는 함수
-void parse_query_params(char *query_string, HTTPRequest *request) {
-    char *param = strtok(query_string, "&");
-    while (param) {
-        char *equal = strchr(param, '=');
-        if (!equal) {
-            fprintf(stderr, "잘못된 쿼리 파라미터: %s\n", param);
-            exit(EXIT_FAILURE);
-        }
+void parse_query_params(char *query_start, size_t length, HTTPRequest *request) {
+    char *end = query_start + length;
+    char *param_start = query_start;
+    while (param_start < end) {
+        char *equal = memchr(param_start, '=', end - param_start);
+        if (!equal) break;
+        char *amp = memchr(equal, '&', end - equal);
 
-        *equal = '\0';
-        char *name = trim_whitespace(param);
-        char *value = trim_whitespace(equal + 1);
+        HTTPQueryParam *query_param = malloc(sizeof(HTTPQueryParam));
+        query_param->name.start = param_start;
+        query_param->name.length = equal - param_start;
 
-        HTTPQueryParam *query_param = (HTTPQueryParam*)malloc(sizeof(HTTPQueryParam));
-        query_param->name = strdup(name);
-        query_param->value = strdup(value);
-        query_param->next = NULL;
-
-        if (!request->query) {
-            request->query = query_param;
+        if (amp) {
+            query_param->value.start = equal + 1;
+            query_param->value.length = amp - (equal + 1);
+            param_start = amp + 1;
         } else {
-            HTTPQueryParam *current = request->query;
-            while (current->next) current = current->next;
-            current->next = query_param;
+            query_param->value.start = equal + 1;
+            query_param->value.length = end - (equal + 1);
+            param_start = end;
         }
 
-        param = strtok(NULL, "&");
+        query_param->next = request->query;
+        request->query = query_param;
     }
 }
 
-// 요청 라인을 파싱하는 함수
 void read_request_line(const char *buffer, HTTPRequest *request) {
-    char *line = strdup(buffer);
-    char *method = strtok(line, " ");
-    char *path_with_query = strtok(NULL, " ");
-    char *version = strtok(NULL, " ");
+    const char *space1 = strchr(buffer, ' ');
+    const char *space2 = strchr(space1 + 1, ' ');
 
-    if (!method || !path_with_query || !version) {
-        free(line);
-        fprintf(stderr, "잘못된 요청 라인\n");
-        exit(EXIT_FAILURE);
-    }
+    request->method.start = (char *)buffer;
+    request->method.length = space1 - buffer;
 
-    request->method = strdup(method);
-
-    // 쿼리 문자열 분리
-    char *query_start = strchr(path_with_query, '?');
+    const char *path_start = space1 + 1;
+    const char *query_start = memchr(path_start, '?', space2 - path_start);
     if (query_start) {
-        *query_start = '\0';
-        request->path = strdup(path_with_query);
-        parse_query_params(query_start + 1, request);
+        request->path.start = (char *)path_start;
+        request->path.length = query_start - path_start;
+        parse_query_params((char *)(query_start + 1), space2 - (query_start + 1), request);
     } else {
-        request->path = strdup(path_with_query);
+        request->path.start = (char *)path_start;
+        request->path.length = space2 - path_start;
     }
 
-    if (strncmp(version, "HTTP/1.", 7) == 0) {
-        request->protocol_minor_version = version[7] - '0';
+    if (strncmp(space2 + 1, "HTTP/1.", 7) == 0) {
+        request->protocol_minor_version = space2[8] - '0';
     } else {
-        fprintf(stderr, "지원되지 않는 HTTP 버전\n");
-        free(line);
+        fprintf(stderr, "Unsupported HTTP version\n");
         exit(EXIT_FAILURE);
     }
-
-    free(line);
 }
 
-// 헤더 필드를 파싱하는 함수
-void read_header_field(const char *buffer, HTTPRequest *request) {
-    char *line = strdup(buffer);
-    char *colon = strchr(line, ':');
+void read_header_field(const char *line, size_t length, HTTPRequest *request) {
+    const char *colon = memchr(line, ':', length);
+    if (!colon) return;
 
-    if (!colon) {
-        free(line);
-        fprintf(stderr, "잘못된 헤더 필드\n");
-        exit(EXIT_FAILURE);
-    }
+    HTTPHeaderField *field = malloc(sizeof(HTTPHeaderField));
+    field->name.start = (char *)line;
+    field->name.length = colon - line;
 
-    *colon = '\0';
-    char *name = trim_whitespace(line);
-    char *value = trim_whitespace(colon + 1);
+    const char *value_start = colon + 1;
+    while (*value_start == ' ' && (value_start - line) < length) value_start++;
+    field->value.start = (char *)value_start;
+    field->value.length = (line + length) - value_start;
 
-    HTTPHeaderField *field = (HTTPHeaderField*)malloc(sizeof(HTTPHeaderField));
-    field->name = strdup(name);
-    field->value = strdup(value);
-    field->next = NULL;
-
-    if (!request->header) {
-        request->header = field;
-    } else {
-        HTTPHeaderField *current = request->header;
-        while (current->next) current = current->next;
-        current->next = field;
-    }
-
-    free(line);
+    field->next = request->header;
+    request->header = field;
 }
 
-// HTTP 요청 데이터를 파싱하는 메인 함수
+void parse_host_and_port(HTTPRequest *request) {
+    HTTPHeaderField *header = request->header;
+    while (header) {
+        if (header->name.length == 4 && strncasecmp(header->name.start, "Host", 4) == 0) {
+            request->host.start = header->value.start;
+            request->host.length = header->value.length;
+
+            char *colon = memchr(request->host.start, ':', request->host.length);
+            if (colon) {
+                request->port = atoi(colon + 1);
+                request->host.length = colon - request->host.start;
+            } else {
+                request->port = 80;
+            }
+            return;
+        }
+        header = header->next;
+    }
+    request->port = 80;
+}
+
 HTTPRequest *read_request(const char *buffer) {
-    HTTPRequest *request = (HTTPRequest*)calloc(1, sizeof(HTTPRequest));
-
+    HTTPRequest *request = calloc(1, sizeof(HTTPRequest));
     const char *current = buffer;
-    char line[MAX_LINE_SIZE];
 
-    // 요청 라인 파싱
     const char *line_end = strstr(current, "\r\n");
-    if (!line_end) {
-        fprintf(stderr, "잘못된 HTTP 요청\n");
-        exit(EXIT_FAILURE);
-    }
-    size_t line_length = line_end - current;
-    strncpy(line, current, line_length);
-    line[line_length] = '\0';
-    read_request_line(line, request);
+    read_request_line(current, request);
     current = line_end + 2;
 
-    // 헤더 파싱
     while ((line_end = strstr(current, "\r\n")) && line_end != current) {
-        line_length = line_end - current;
-        strncpy(line, current, line_length);
-        line[line_length] = '\0';
-        read_header_field(line, request);
+        read_header_field(current, line_end - current, request);
         current = line_end + 2;
     }
 
-    // Host 필드와 포트 설정
-    request->host = find_Host_field(request->header);
-    if (request->host) {
-        request->port = find_port(request->host);
-    } else {
-        request->host = NULL;
-        request->port = 0; // Host가 없을 경우
-    }
+    current += 2;
+    request->body.start = (char *)current;
+    request->body.length = strlen(current);
 
-    // 빈 줄을 건너뜀
-    if (line_end == current) {
-        current += 2;
-    }
-
-    // 본문(body)을 파싱
-    if (*current != '\0') {
-        request->body = strdup(current);
-        request->length = strlen(request->body);
-    }
+    parse_host_and_port(request);
 
     return request;
 }
 
-char* find_Host_field(HTTPHeaderField* head) {
-    while (head) {
-        if (strcmp(head->name, "Host") == 0) {
-            return strdup(head->value);
-        }
-        head = head->next;
+// 호출자쪽에서 사용 후 적절히 free 필요
+char *HTTPString_to_value(HTTPString str) {
+    if (!str.start || str.length == 0) {
+        return NULL;
     }
-    return NULL; // Host 필드가 없을 경우
+
+    char *result = (char *)malloc(str.length + 1);
+    if (!result) {
+        perror("malloc failed");
+        return NULL;
+    }
+
+    memcpy(result, str.start, str.length);
+    result[str.length] = '\0';
+
+    return result;
 }
 
-// Host 값에서 포트를 추출하며, 호스트 문자열을 수정하는 함수
-int find_port(char* host) {
-    char* port_s = strstr(host, ":");
-    if (port_s) {
-        *port_s = '\0'; // ':'를 null로 바꿔 호스트와 포트를 분리
-        return atoi(port_s + 1); // ':' 뒤의 포트를 정수로 변환하여 반환
-    }
-    return -1;
-}
-
-// HTTPRequest 구조체를 해제하는 함수
 void free_request(HTTPRequest *request) {
-    if(!request || request == 0x00 || request==NULL)
-        return;
-    if (request->method) free(request->method);
-    if (request->path) free(request->path);
-    if (request->host) free(request->host);
-
     HTTPQueryParam *query = request->query;
     while (query) {
         HTTPQueryParam *next = query->next;
-        free(query->name);
-        free(query->value);
         free(query);
         query = next;
     }
 
-    HTTPHeaderField *current = request->header;
-    while (current) {
-        HTTPHeaderField *next = current->next;
-        free(current->name);
-        free(current->value);
-        free(current);
-        current = next;
+    HTTPHeaderField *header = request->header;
+    while (header) {
+        HTTPHeaderField *next = header->next;
+        free(header);
+        header = next;
     }
 
-    if (request->body) free(request->body);
     free(request);
 }
-
-int get_IP(char* ip_str, const char* hostname, int port) {
-    struct addrinfo hints, *res, *p;
-    //char ip_str[INET6_ADDRSTRLEN];  // IPv6도 포함한 크기
-
-    // hints 초기화
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;       // IPv4 또는 IPv6 허용
-    hints.ai_socktype = SOCK_STREAM;  // TCP 소켓
-
-    char s_port[6];
-    snprintf(s_port, sizeof(s_port), "%d", port);
-    // getaddrinfo 호출
-    int status = getaddrinfo(hostname, "80", &hints, &res);
-    if (status != 0) {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
-        return 1;
-    }
-
-    //printf("IP addresses for %s:\n\n", hostname);
-
-    void *addr;
-    const char *ipver;
-
-    // 첫 번째 노드 처리
-    if (res->ai_family == AF_INET) {  // IPv4
-        struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
-        addr = &(ipv4->sin_addr);
-        ipver = "IPv4";
-    } else if (res->ai_family == AF_INET6) {  // IPv6
-        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)res->ai_addr;
-        addr = &(ipv6->sin6_addr);
-        ipver = "IPv6";
-    } else {
-        fprintf(stderr, "Unknown address family\n");
-        freeaddrinfo(res);
-        return 1;
-    }
-
-    // IP 주소를 문자열로 변환
-    inet_ntop(res->ai_family, addr, ip_str, INET_ADDRSTRLEN);
-    printf("  %s: %s\n", ipver, ip_str);
-
-    freeaddrinfo(res);
-    return 0;
-}
-

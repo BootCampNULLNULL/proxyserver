@@ -53,6 +53,7 @@
                 "ssl_conn.c",
                 "log.c",
                 "config_parser.c",
+                "sc_mem_pool.c",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-I./",
