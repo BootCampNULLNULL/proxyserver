@@ -90,8 +90,9 @@ void read_request_line(const char *buffer, HTTPRequest *request) {
         request->protocol_minor_version = version[7] - '0';
     } else {
         fprintf(stderr, "지원되지 않는 HTTP 버전\n");
+        LOG(INFO, "지원되지 않는 HTTP 버전 [%s]",version);
         free(line);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE);
     }
 
     free(line);
@@ -134,7 +135,7 @@ HTTPRequest *read_request(const char *buffer) {
 
     const char *current = buffer;
     char line[MAX_LINE_SIZE];
-
+    LOG(INFO, "read request : %s",buffer);
     // 요청 라인 파싱
     const char *line_end = strstr(current, "\r\n");
     if (!line_end) {

@@ -31,6 +31,13 @@
 extern EVP_PKEY *ca_key;
 extern X509 *ca_cert;
 
+extern thread_cond_t *thread_cond;
+extern pthread_mutex_t cond_lock;
+extern pthread_mutex_t mutex_lock; 
+extern pthread_cond_t async_cond;
+extern pthread_mutex_t async_mutex;
+extern task_arg_t *task_arg;
+
 void log_exit(const char *fmt, ...)
 {
     va_list ap;
@@ -59,6 +66,12 @@ void set_nonblocking(int fd)
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
+void set_blocking(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    flags &= ~O_NONBLOCK; //논블록 플래그 제거
+}
+
 /**
  * @brief 도메인명에서 호스트명 획득하여 remote 서버와 통신을 위한 fd 생성
  * 
@@ -68,7 +81,6 @@ void set_nonblocking(int fd)
  */
 int connect_remote_http(const char* hostname, int port)
 {
-    LOG(DEBUG,"sgseo debug");
     struct hostent *host;
     if((host = gethostbyname(hostname)) == NULL) {
         perror(hostname);
@@ -87,11 +99,8 @@ int connect_remote_http(const char* hostname, int port)
     remoteaddr.sin_family = AF_INET;
     remoteaddr.sin_addr.s_addr = *(long*)(host->h_addr_list[0]);
     remoteaddr.sin_port = htons(port);
-    LOG(DEBUG,"sgseo debug");
     connect(remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr));
-    LOG(DEBUG,"sgseo debug");
     set_nonblocking(remote_fd);
-    LOG(DEBUG,"sgseo debug");
     return remote_fd;
 }
 
@@ -120,7 +129,7 @@ SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx)
     while(1){
         int ret = SSL_connect(remote_ssl);
         if (ret == 1) {
-            LOG(INFO,"Remote SSL Handshake Success\n");
+            LOG(INFO,"Remote[fd: %d] SSL Handshake Success\n",remote_fd);
             return remote_ssl;
         } else {
             int err = SSL_get_error(remote_ssl, ret);
@@ -131,7 +140,8 @@ SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx)
                     continue;
                 default:
                     LOG(ERROR,"Client SSL Handshake error - %d\n", err);
-                    exit(1);
+                    return NULL;
+                    // exit(1);
             }
         }
     }
@@ -165,6 +175,7 @@ int handle_recv_error(int sockfd)
     } else if (errno == ECONNRESET) {
         // 상대방이 연결을 강제 종료한 경우
         LOG(ERROR,"recv() - Connection reset by peer\n");
+        return STAT_FAIL;
         close(sockfd);
     } else if (errno == EINTR) {
         // 인터럽트로 인해 recv()가 중단된 경우, 다시 시도 가능
@@ -172,7 +183,8 @@ int handle_recv_error(int sockfd)
     } else {
         // 기타 오류
         LOG(ERROR,"recv() - Error: %s\n", strerror(errno));
-        close(sockfd);
+        return STAT_FAIL;
+        close(sockfd); 
     }
     return STAT_OK;
 }
@@ -188,10 +200,17 @@ int handle_recv_error(int sockfd)
 int initial_read(task_t* task)
 {
     ssize_t buf_size = recv(task->client_fd, task->buffer, MAX_BUFFER_SIZE, MSG_PEEK);
-    if(handle_recv_error(task->client_fd)!=STAT_OK)
+    if(buf_size <= 0 )
     {
-        return -1;
+        if(handle_recv_error(task->client_fd)!=STAT_OK)
+        {
+            return STAT_FAIL;
+        }
+        else
+             return 1;
+        
     }
+    
     // if(set_current_time(&task->current_time) == STAT_FAIL)
     // {
     //     return STAT_FAIL;
@@ -208,7 +227,7 @@ int initial_read(task_t* task)
             // EVP_PKEY_free(key); //sgseo free TO-DO
             // X509_free(dynamic_cert);
             // close(client_sock);
-            return NULL;
+            return STAT_FAIL;
         }
 
         if (!SSL_CTX_use_PrivateKey_file(task->client_ctx, "/home/sgseo/proxyserver/proxy_key.pem", SSL_FILETYPE_PEM)) {
@@ -217,7 +236,7 @@ int initial_read(task_t* task)
             // EVP_PKEY_free(key);
             // X509_free(dynamic_cert);
             // close(client_sock);
-            return NULL;
+            return STAT_FAIL;
         }
         task->client_ssl = SSL_new(task->client_ctx);
         SSL_set_fd(task->client_ssl, task->client_fd);
@@ -251,8 +270,10 @@ int recv_data(task_t* task, int epoll_fd)
         } else if (ret == 0) {
             // 클라이언트 연결 종료
             LOG(ERROR,"Client disconnected\n");
+            pthread_mutex_lock(&mutex_lock); 
             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+            pthread_mutex_unlock(&mutex_lock); 
             close(task->client_fd);
             close(task->remote_fd);
             free(task);
@@ -264,7 +285,9 @@ int recv_data(task_t* task, int epoll_fd)
             } else {
                 // recv 실패
                 perror("recv failed");
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                pthread_mutex_unlock(&mutex_lock); 
                 close(task->client_fd);
                 free(task);
                 exit(1);
@@ -290,9 +313,11 @@ int client_auth(task_t* task, int epoll_fd, struct epoll_event *ev)
     task->auth = true;
     task->buffer_len = 0;
     memset(task->buffer, 0, MAX_BUFFER_SIZE);
-    ev->events = EPOLLIN ;
+    ev->events = EPOLLIN|EPOLLRDHUP ;
     ev->data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유 
+    pthread_mutex_lock(&mutex_lock); 
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);    
+    pthread_mutex_unlock(&mutex_lock); 
     return STAT_OK;
 }
 
@@ -333,13 +358,11 @@ int client_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
     if(!strncmp(task->req->method,"CONNECT", 7)){
         return client_connect_req(task, epoll_fd, ev);
     }
-    LOG(DEBUG,"sgseo debug");
     // url db 조회 -> 필터링 
 
     if(task->req->port == -1) {
         task->req->port = DEFUALT_HTTP_PORT;
     }
-    LOG(DEBUG,"sgseo debug");
     // remote 연결
     task->remote_fd = connect_remote_http(task->req->host, task->req->port);
     LOG(INFO,"remote connection success\n");
@@ -347,7 +370,9 @@ int client_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
     task->state = STATE_REMOTE_WRITE;
     ev->events = EPOLLOUT ;
     ev->data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유 
+    pthread_mutex_lock(&mutex_lock); 
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
+    pthread_mutex_unlock(&mutex_lock); 
 
     
     // free(req);  
@@ -372,10 +397,13 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
         int ret = SSL_read(task->client_ssl, task->buffer, MAX_BUFFER_SIZE); 
         if (ret > 0) {
             task->buffer_len = task->buffer_len + ret;
-            continue;
+            // continue;
+            break;
         } else if (ret == 0) {
             LOG(ERROR,"Client disconnected\n");
+            pthread_mutex_lock(&mutex_lock); 
             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+            pthread_mutex_unlock(&mutex_lock); 
             free_request(task->req);
             SSL_free(task->client_ssl);
             SSL_CTX_free(task->client_ctx);
@@ -399,21 +427,29 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
 
     free_request(task->req);
     task->req = read_request(task->buffer);
+    if(task->req){
+        if(!strncmp(task->req->method,"CONNECT",7))
+        {
+            //client <-https-> proxy <-https-> remote인 경우
+            //SSL 암호화 연결 상태에서 CONNECT method 처리
+            return client_connect_req_with_ssl(task, epoll_fd, ev);
+        }
 
-    if(!strncmp(task->req->method,"CONNECT",7))
-    {
-        //client <-https-> proxy <-https-> remote인 경우
-        //SSL 암호화 연결 상태에서 CONNECT method 처리
-        return client_connect_req_with_ssl(task, epoll_fd, ev);
+        if(task->req->port == -1) {
+            task->req->port = DEFUALT_HTTPS_PORT;
+        }
     }
-
-    if(task->req->port == -1) {
+    else{
+        task->req = (HTTPRequest*)calloc(1, sizeof(HTTPRequest));
         task->req->port = DEFUALT_HTTPS_PORT;
     }
+
     task->state = STATE_REMOTE_WRITE;
     ev->events = EPOLLOUT ;
     ev->data.ptr = task;
+    pthread_mutex_lock(&mutex_lock); 
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
+    pthread_mutex_unlock(&mutex_lock); 
 
     
     return STAT_OK;
@@ -459,7 +495,7 @@ int client_write_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
     send(task->client_fd, task->buffer, task->buffer_len, 0);
     // 세션 유지시
     // task->state = STATE_CLIENT_READ;
-    // ev->events = EPOLLIN ;
+    // ev->events = EPOLLIN|EPOLLRDHUP ;
     // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
     // free(task->req);
 
@@ -507,7 +543,9 @@ int remote_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
             // remote 연결 종료
             LOG(DEBUG,"remote disconnected\n");
             if (task->buffer_len == 0) {
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                pthread_mutex_unlock(&mutex_lock); 
                 free_request(task->req);
                 close(task->client_fd);
                 close(task->remote_fd);
@@ -521,15 +559,19 @@ int remote_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
                 // 읽을 데이터가 더 이상 없음 
                 // sgseo TO-DO 데이터를 다 읽어서 읽을 데이터가 없는 상황일 수 있는데,, 그럴때는 어떻게 해야되는지 처리 필요
                 LOG(DEBUG,"No data to read\n");
-                ev->events = EPOLLIN ;
+                ev->events = EPOLLIN|EPOLLRDHUP ;
                 ev->data.ptr = task;
-                epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+                pthread_mutex_lock(&mutex_lock);
+                epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
+                pthread_mutex_unlock(&mutex_lock);
                 break;
             } else {
                 // recv 실패
                 perror("recv failed");
+                pthread_mutex_lock(&mutex_lock);
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                pthread_mutex_unlock(&mutex_lock);
+                // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                 close(task->client_fd);
                 close(task->remote_fd);
                 free(task);
@@ -563,6 +605,7 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
     //SSL_read()
     memset(task->buffer, 0, MAX_BUFFER_SIZE);
     task->buffer_len = 0;
+    LOG(DEBUG, "sgseo");
     while(1) {
         //에러 처리 필요
         memset(task->buffer, 0, MAX_BUFFER_SIZE);
@@ -581,7 +624,10 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
         } else if (ret == 0) {
             LOG(DEBUG,"remote disconnected\n");
             if (task->buffer_len == 0) {
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                pthread_mutex_unlock(&mutex_lock); 
                 free_request(task->req);
                 SSL_free(task->client_ssl);
                 SSL_CTX_free(task->client_ctx);
@@ -601,16 +647,19 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
             else LOG(ERROR, "SSL_read error %d",err);
             if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
                 LOG(DEBUG,"No data to read\n");
-                // ev->events = EPOLLIN ;
-                // ev->data.ptr = task;
-                // epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+                ev->events = EPOLLIN|EPOLLRDHUP ;
+                ev->data.ptr = task;
+                pthread_mutex_lock(&mutex_lock);
+                epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
+                pthread_mutex_unlock(&mutex_lock);
                 // // SSL_read finished
-                
-                break;
+                return STAT_FAIL;
+                // break;
                 // continue;
             } else {
                 LOG(ERROR,"Remote SSL Read error - %d\n", err);
-                exit(1);
+                // exit(1);
+                break;
             }
         }
     } //데이터 읽을게 더 있으면 
@@ -628,6 +677,16 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
     }
 #endif
+    LOG(DEBUG, "sgseo");
+    pthread_mutex_lock(&mutex_lock);
+    // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+    pthread_mutex_unlock(&mutex_lock);
+    LOG(DEBUG, "sgseo");
+    // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+    // close(task->client_fd);
+    LOG(DEBUG, "sgseo");
+    close(task->remote_fd);
+    LOG(DEBUG, "sgseo");
     return STAT_OK;
 }
 
@@ -654,15 +713,19 @@ int remote_write_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
             // 모든 데이터를 전송 완료한 경우
             if (task->buffer_len == 0) {
                 task->state = STATE_REMOTE_READ;
-                ev->events = EPOLLIN ;
+                ev->events = EPOLLIN|EPOLLRDHUP ;
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+                pthread_mutex_unlock(&mutex_lock); 
                 break;
             }
         } else if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             if (errno == EAGAIN || EWOULDBLOCK ) {
                 LOG(DEBUG,"Send buffer full, waiting for EPOLLOUT event...\n");
                 ev->events = EPOLLOUT ;
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+                pthread_mutex_unlock(&mutex_lock); 
                 break;
             } else if (errno == EPIPE) {
                 LOG(ERROR,"Broken pipe: Connection closed by peer.\n");
@@ -693,6 +756,7 @@ int remote_write_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
     ssize_t sent_bytes = 0;
     while (task->buffer_len > 0) {
         int ret = SSL_write(task->remote_ssl, task->buffer + sent_bytes, task->buffer_len);
+        LOG(INFO, "remote_write data: %s", task->buffer + sent_bytes);
         if (ret > 0) {
             sent_bytes += ret;
             task->buffer_len -= ret;
@@ -701,8 +765,10 @@ int remote_write_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
             if (task->buffer_len == 0) {
                 LOG(INFO,"Success STATE_REMOTE_WRITE");
                 task->state = STATE_REMOTE_READ;
-                ev->events = EPOLLIN ;
+                ev->events = EPOLLIN|EPOLLRDHUP ;
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+                pthread_mutex_unlock(&mutex_lock); 
                 memset(task->buffer, 0 , MAX_BUFFER_SIZE);
                 break;
             }
@@ -711,7 +777,9 @@ int remote_write_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
             if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
                 LOG(DEBUG,"Send buffer full, waiting for EPOLLOUT event...\n");
                 ev->events = EPOLLOUT ;
+                pthread_mutex_lock(&mutex_lock); 
                 epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->remote_fd, ev);
+                pthread_mutex_unlock(&mutex_lock); 
                 break; 
             } else {
                 // SSL_write 실패 처리
@@ -733,17 +801,20 @@ int remote_write_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
  */
 int client_proxy_ssl_conn(task_t* task, int epoll_fd, struct epoll_event *ev)
 {
-    while(1)
-    {
+    // while(1)
+    // {
         
         int ret = SSL_accept(task->client_ssl);
         if (ret == 1) {
             LOG(DEBUG,"Client SSL Handshake Success\n");
             task->state = STATE_CLIENT_READ;
             task->client_side_https = true;
-            ev->events = EPOLLIN ;
+            ev->events = EPOLLIN|EPOLLRDHUP ;
             ev->data.ptr = task;
+            // set_nonblocking(task->client_fd);
+            pthread_mutex_lock(&mutex_lock); 
             epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
+            pthread_mutex_unlock(&mutex_lock); 
             return STAT_OK;
         }
         // SSL_accept가 완료되지 않은 경우
@@ -751,15 +822,13 @@ int client_proxy_ssl_conn(task_t* task, int epoll_fd, struct epoll_event *ev)
         switch(err) {
             case SSL_ERROR_WANT_READ:
                 LOG(DEBUG, "SSL_ERROR_WANT_READ");
-                continue;
             case SSL_ERROR_WANT_WRITE:
                 LOG(DEBUG, "SSL_ERROR_WANT_WRITE");
-                continue;
             default:
-                LOG(DEBUG,"Client SSL Handshake error - %d\n", err);
-                exit(1);
+                LOG(DEBUG,"Client SSL Handshake error(%d) - %s\n", err,strerror(err));
+                // exit(1);
         }
-    }
+    // }
     return STAT_OK;
 }
 
@@ -781,6 +850,15 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     task->remote_fd = connect_remote_http(task->req->host, task->req->port);
     // remote ssl 연결
     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
+    if(task->remote_ssl==NULL)
+    {
+        // TO-DO 메모리 해제
+        pthread_mutex_lock(&mutex_lock); 
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+        pthread_mutex_unlock(&mutex_lock); 
+        return STAT_FAIL;
+    }
     task->client_side_https = true;
     task->remote_side_https = true;
     // if(task->req->port == -1) {
@@ -802,15 +880,14 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     if(setup_ssl_cert(task->req->host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
-    LOG(DEBUG,"sgseo debug");
+    // set_blocking(task->client_fd);
     SSL_set_fd(task->client_ssl, task->client_fd);
-    LOG(DEBUG,"sgseo debug");
     task->state = STATE_CLIENT_PROXY_SSL_CONN;
-    ev->events = EPOLLIN ;
+    ev->events = EPOLLIN|EPOLLRDHUP | EPOLLOUT;
     ev->data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유 
-    LOG(DEBUG,"sgseo debug");
+    pthread_mutex_lock(&mutex_lock); 
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->client_fd, ev);
-    LOG(DEBUG,"sgseo debug");
+    pthread_mutex_unlock(&mutex_lock); 
     return STAT_OK;
 }
 
@@ -844,6 +921,15 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     task->remote_fd = connect_remote_http(task->req->host, task->req->port);
     // remote ssl 연결
     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
+    if(task->remote_ssl==NULL)
+    {
+        // TO-DO 메모리 해제
+        pthread_mutex_lock(&mutex_lock); 
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+        pthread_mutex_unlock(&mutex_lock); 
+        return STAT_FAIL;
+    }
     task->client_side_https = true;
     task->remote_side_https = true;
 
@@ -868,9 +954,12 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     BIO_set_ssl(task->sbio, task->before_client_ssl, BIO_NOCLOSE);
     SSL_set_bio(task->client_ssl, task->sbio, task->sbio);
     task->state = STATE_CLIENT_PROXY_SSL_CONN;
-    ev->events = EPOLLIN ;
+    ev->events = EPOLLIN|EPOLLRDHUP | EPOLLOUT;
     ev->data.ptr = task;
+    // set_blocking(task->client_fd);
+    pthread_mutex_lock(&mutex_lock); 
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
+    pthread_mutex_unlock(&mutex_lock); 
     return STAT_OK;
 }
 
@@ -878,6 +967,7 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
 int client_read(task_t* task, int epoll_fd, struct epoll_event *ev)
 {
     int ret;
+
     if(task->client_side_https)
     {
         client_read_with_https(task, epoll_fd,ev);
@@ -899,11 +989,18 @@ int client_write(task_t* task, int epoll_fd, struct epoll_event *ev)
     {
         client_write_with_http(task, epoll_fd, ev);
     }
+    pthread_mutex_lock(&mutex_lock); 
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+    pthread_mutex_unlock(&mutex_lock); 
     return STAT_OK;
 }
 
 int remote_read(task_t* task, int epoll_fd, struct epoll_event *ev)
 {
+
+
+
     if(task->remote_side_https)
     {
         remote_read_with_https(task, epoll_fd, ev);
@@ -914,6 +1011,28 @@ int remote_read(task_t* task, int epoll_fd, struct epoll_event *ev)
     }
     return STAT_OK;
 }
+
+void* remote_read_process(void *arg)
+{
+    LOG(DEBUG, "sgseo");
+    task_arg_t* taskArg = (task_arg_t*)arg;
+    task_t *task = taskArg->task;
+    struct epoll_event *ev = taskArg->ev;
+    int epoll_fd = taskArg->epoll_fd;
+    LOG(DEBUG, "sgseo");
+    if(task->remote_side_https)
+    {
+        LOG(DEBUG, "sgseo");
+        remote_read_with_https(task, epoll_fd, ev);
+    }
+    else
+    {
+        LOG(DEBUG, "sgseo");
+        remote_read_with_http(task, epoll_fd, ev);
+    }
+    return STAT_OK;
+}
+
 
 
 int remote_write(task_t* task, int epoll_fd, struct epoll_event *ev)
@@ -929,3 +1048,22 @@ int remote_write(task_t* task, int epoll_fd, struct epoll_event *ev)
     return STAT_OK;
 }
 
+void *thread_func(void *data)
+{
+    int th_idx = *((int*)data);
+    // 쓰레드 동기화용 조건변수
+    pthread_mutex_lock(&async_mutex);
+    pthread_cond_signal(&async_cond);
+    pthread_mutex_unlock(&async_mutex);
+    LOG(DEBUG, "Thread[%d] create ", th_idx);
+    while(1)
+    {
+        pthread_mutex_lock(&cond_lock);
+        pthread_cond_wait(thread_cond[th_idx].cond, &cond_lock);
+        LOG(DEBUG, "Thread[%d] work ", th_idx);
+        task_arg[th_idx].func(&(task_arg[th_idx]));
+        thread_cond[th_idx].busy = 0;
+        LOG(DEBUG, "Thread[%d] Done ", th_idx);
+        pthread_mutex_unlock(&cond_lock);
+    }
+}
