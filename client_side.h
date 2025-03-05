@@ -54,10 +54,16 @@ typedef struct task_t {
 // int connect_remote_http(const char* hostname, int port);
 // SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx);
 
-typedef struct task_arg{
+typedef struct task_arg_t{
     task_t *task;
     int epoll_fd;
     struct epoll_event *ev;
-}task_arg;
+    void (*func)(void *);
+}task_arg_t;
+
+typedef struct thread_cond_t{
+    int busy;
+    pthread_cond_t *cond;
+}thread_cond_t;
 
 #endif //CLIENT_SIDE

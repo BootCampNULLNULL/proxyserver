@@ -23,4 +23,6 @@ int client_read(task_t* task, int epoll_fd, struct epoll_event *ev);
 int client_write(task_t* task, int epoll_fd, struct epoll_event *ev);
 
 void* remote_read_process(void *arg);
+
+void *thread_func(void *data);
 #endif//NET
