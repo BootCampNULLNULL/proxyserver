@@ -211,8 +211,8 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
         }
         else{
             
-            sprintf(san_field, "DNS:*%s",strchr(common_name,'.'));
-            // sprintf(san_field, "DNS:%s",common_name);
+            // sprintf(san_field, "DNS:*%s",strchr(common_name,'.'));
+            sprintf(san_field, "DNS:%s",common_name);
         }
         LOG(INFO, "domain: %s", san_field);
 

@@ -6,7 +6,7 @@
 #include "log.h"
 
 #define LOG_FILE "log"   // 로그 파일 경로
-#define MAX_LOG_MESSAGE 1024   // 최대 로그 메시지 길이
+#define MAX_LOG_MESSAGE 4096   // 최대 로그 메시지 길이
 
 
 static LogLevel current_log_level = TRACE;  // 기본 로그 레벨

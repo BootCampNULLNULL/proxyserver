@@ -162,7 +162,7 @@ int main(void) {
                     task->remote_ssl = NULL;
                     task->remote_side_https = false;
                     task->buffer_len = 0;
-                    task->state = STATE_INITIAL_READ;
+                    task->state = STATE_CLIENT_READ;
                     task->auth = false;
                     ev.events = EPOLLIN|EPOLLRDHUP;
                     ev.data.ptr = task;
@@ -174,34 +174,43 @@ int main(void) {
                 task_t* task = (task_t*)events[i].data.ptr;
 
                 if (!task) continue; // 안전 검사
-                if(task->state == STATE_INITIAL_READ){
+                // if(task->state == STATE_INITIAL_READ){
                     
-                    int ret = initial_read(task);
-                    if(ret == STAT_OK){
-                        LOG(INFO,  ">> STATE_INITIAL_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
-                    }
-                    else if(ret == STAT_FAIL){
-                        LOG(INFO, "STATE_INITIAL_READ FAIL");
-                        pthread_mutex_lock(&mutex_lock); 
+                //     int ret = initial_read(task);
+                //     if(ret == STAT_OK){
+                //         LOG(INFO,  ">> STATE_INITIAL_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
+                //     }
+                //     else if(ret == STAT_FAIL){
+                //         LOG(INFO, "STATE_INITIAL_READ FAIL");
+                //         pthread_mutex_lock(&mutex_lock); 
+                //         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                //         pthread_mutex_unlock(&mutex_lock); 
+                //         close(task->client_fd);
+                //     }
+                //     else{
+                //         char strTmp[MAX_BUFFER_SIZE] = {0,};
+                //         ret = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, 0);
+                //         LOG(INFO, "STATE_INITIAL_READ read buf resul[%d]",ret);
+                //         continue;
+                //     }
+                // }
+                if (task->state == STATE_CLIENT_READ) {
+                    if (events[i].events & EPOLLRDHUP) {
+                        printf("Client disconnected (EPOLLRDHUP)\n");
                         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                        pthread_mutex_unlock(&mutex_lock); 
                         close(task->client_fd);
                     }
-                    else{
-                        char strTmp[MAX_BUFFER_SIZE] = {0,};
-                        ret = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, 0);
-                        LOG(INFO, "STATE_INITIAL_READ read buf resul[%d]",ret);
-                        continue;
-                    }
-                }
-                if (task->state == STATE_CLIENT_READ) {
                     int result = 0;
                     char strTmp[MAX_BUFFER_SIZE] = {0,};
                     result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
-                    if(result<=0){
-                        result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, 0);
-                        LOG(INFO, "STATE_CLIENT_READ read buf resul[%d]",result);
-                        continue;
+                    if(result<=0){ 
+                        if(errno == EAGAIN || errno == EWOULDBLOCK)
+                            continue;
+                        else{
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                            close(task->client_fd);
+                            // free(task);
+                        }
                     }
                     LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]<<",task->client_fd,task->remote_fd, event_count);
                     int ret = client_read(task, epoll_fd, &ev);    
@@ -221,16 +230,7 @@ int main(void) {
                         continue;
                     LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
 #if 1
-                    // task_arg *arg = (task_arg*)calloc(1,sizeof(task_arg));
-                    // arg->task = (task_t*)calloc(1,sizeof(task_t));
-                    // memcpy(arg->task, task, sizeof(task_t));
-                    // arg->epoll_fd = epoll_fd;
-                    // arg->ev = &ev;
-                    // pthread_t thread;
 
-                    // pthread_create(&thread, NULL, remote_read_process, arg);
-                    // pthread_detach(thread);
-                    // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                     for(int i=0;i<MAX_THREAD_POOL;i++){
                         if(!thread_cond[i].busy){
                             memset(&task_arg[i], 0, sizeof(task_arg_t));

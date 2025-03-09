@@ -71,8 +71,10 @@ void read_request_line(const char *buffer, HTTPRequest *request) {
     if (!method || !path_with_query || !version) {
         free(line);
         fprintf(stderr, "잘못된 요청 라인\n");
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE);
+        return;
     }
+
 
     request->method = strdup(method);
 
@@ -135,7 +137,6 @@ HTTPRequest *read_request(const char *buffer) {
 
     const char *current = buffer;
     char line[MAX_LINE_SIZE];
-    LOG(INFO, "read request : %s",buffer);
     // 요청 라인 파싱
     const char *line_end = strstr(current, "\r\n");
     if (!line_end) {
