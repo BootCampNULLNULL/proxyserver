@@ -56,7 +56,6 @@ pthread_mutex_t mutex_lock= PTHREAD_MUTEX_INITIALIZER;
 
 int main(void) {
 
-
     if(init_proxy()!=STAT_OK){
         LOG(ERROR, "proxy init fail");
     }
@@ -93,7 +92,7 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
     
-    //thread pool 생성 
+    // thread pool 생성 
     pthread_t thread;
     thread_cond = (thread_cond_t *)malloc(sizeof(thread_cond_t)*MAX_THREAD_POOL);
     task_arg = (task_arg_t *)malloc(sizeof(task_arg_t)*MAX_THREAD_POOL);
@@ -203,9 +202,9 @@ int main(void) {
                     int result = 0;
                     char strTmp[MAX_BUFFER_SIZE] = {0,};
                     result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
-                    if(result<=0){ 
+                    if(result<=0){
                         if(errno == EAGAIN || errno == EWOULDBLOCK)
-                            continue;
+                        continue;
                         else{
                             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
                             close(task->client_fd);
@@ -229,8 +228,8 @@ int main(void) {
                     if(result<=0)
                         continue;
                     LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
+                    // int ret = remote_read(task, epoll_fd, &ev);
 #if 1
-
                     for(int i=0;i<MAX_THREAD_POOL;i++){
                         if(!thread_cond[i].busy){
                             memset(&task_arg[i], 0, sizeof(task_arg_t));
@@ -257,12 +256,11 @@ int main(void) {
 #else
                     int ret = remote_read(task, epoll_fd, &ev);
 #endif
-
                 } 
                 else if (task->state == STATE_REMOTE_WRITE) {
                     LOG(INFO,  ">> STATE_REMOTE_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
                     int ret = remote_write(task, epoll_fd, &ev);  
-                } 
+                }
                 else if (task->state == STATE_CLIENT_PROXY_SSL_CONN)
                 {
                     LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);

@@ -355,7 +355,8 @@ int client_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
         return STAT_OK;
     }
     //method CONNECT 일때
-    if(!strncmp(task->req->method,"CONNECT", 7)){
+
+    if(!strncmp(task->req->method.start,"CONNECT", 7)){
 
 #if 1
     task_arg_t *arg = (task_arg_t*)calloc(1,sizeof(task_arg_t));
@@ -379,7 +380,7 @@ int client_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
         task->req->port = DEFUALT_HTTP_PORT;
     }
     // remote 연결
-    task->remote_fd = connect_remote_http(task->req->host, task->req->port);
+    task->remote_fd = connect_remote_http(task->req->s_host, task->req->port);
     LOG(INFO,"remote connection success\n");
     
     task->state = STATE_REMOTE_WRITE;
@@ -443,7 +444,7 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
     // free_request(task->req); !
     task->req = read_request(task->buffer);
     if(task->req){
-        if(!strncmp(task->req->method,"CONNECT",7))
+        if(!strncmp(task->req->method.start,"CONNECT",7))
         {
             //client <-https-> proxy <-https-> remote인 경우
             //SSL 암호화 연결 상태에서 CONNECT method 처리
@@ -859,7 +860,7 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     // url db 조회 -> 필터링 
 
     // CONNECT => ssl connect => GET or POST 요청 recv
-    task->remote_fd = connect_remote_http(task->req->host, task->req->port);
+    task->remote_fd = connect_remote_http(task->req->s_host, task->req->port);
     // remote ssl 연결
     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
     if(task->remote_ssl==NULL)
@@ -890,7 +891,7 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     send(task->client_fd, response, strlen(response), 0);
 #endif
-    if(setup_ssl_cert(task->req->host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
+    if(setup_ssl_cert(task->req->s_host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
     // set_blocking(task->client_fd);
@@ -931,7 +932,7 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     // url db 조회 -> 필터링 
 
     // CONNECT => ssl connect => GET or POST 요청 recv
-    task->remote_fd = connect_remote_http(task->req->host, task->req->port);
+    task->remote_fd = connect_remote_http(task->req->s_host, task->req->port);
     // remote ssl 연결
     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
     if(task->remote_ssl==NULL)
@@ -960,7 +961,7 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     // client ssl 연결
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     SSL_write(task->before_client_ssl, response, strlen(response));
-    if(setup_ssl_cert(task->req->host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
+    if(setup_ssl_cert(task->req->s_host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
     task->sbio = BIO_new(BIO_f_ssl());
@@ -1011,9 +1012,6 @@ int client_write(task_t* task, int epoll_fd, struct epoll_event *ev)
 
 int remote_read(task_t* task, int epoll_fd, struct epoll_event *ev)
 {
-
-
-
     if(task->remote_side_https)
     {
         remote_read_with_https(task, epoll_fd, ev);
