@@ -3,6 +3,8 @@
 #include "http.h"
 #include "ssl_conn.h"
 #include "client_side.h"
+#include "sc_mem_pool.h"
+
 int is_tls_handshake(const char *data);
 int handle_recv_error(int sockfd);
 int initial_read(task_t* task);

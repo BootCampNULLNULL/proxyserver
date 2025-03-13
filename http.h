@@ -1,5 +1,8 @@
 #ifndef HTTP
 #define HTTP
+
+#include "sc_mem_pool.h"
+
 #define MAX_REQUEST_BODY_LENGTH (1024 * 1024)
 #define MAX_LINE_SIZE 4096
 #define MAX_METHOD_SIZE 16
@@ -47,9 +50,10 @@ typedef struct HTTPRequest {
     int protocol_minor_version;
     HTTPString method;
     HTTPString path;
+    HTTPString query;
     int port;
     HTTPString host;
-    HTTPQueryParam *query;
+    // HTTPQueryParam *query;
     HTTPHeaderField *header;
     HTTPString body;
     long length;
@@ -58,11 +62,12 @@ typedef struct HTTPRequest {
 
 char *trim_whitespace(char *str);
 void parse_query_params(char *query_start, size_t length, HTTPRequest *request);
-void read_request_line(const char *buffer, HTTPRequest *request);
-void read_header_field(const char *line, size_t length, HTTPRequest *request);
-void parse_host_and_port(HTTPRequest *request);
 
-HTTPRequest *read_request(const char *buffer);
+void read_request_line(sc_buf_t* buf, HTTPRequest *request);
+void read_header_field(sc_buf_t* buf, size_t length, HTTPRequest *request);
+HTTPRequest *read_request(sc_buf_t* buf);
+
+void parse_host_and_port(HTTPRequest *request);
 char *HTTPString_to_value(HTTPString str);
 void free_request(HTTPRequest *request);
 

@@ -54,6 +54,75 @@ task_arg_t *task_arg;
 //
 pthread_mutex_t mutex_lock= PTHREAD_MUTEX_INITIALIZER; 
 
+task_t* create_task() {
+    
+    task_t* task = (task_t*)malloc(sizeof(task_t));
+    
+    task->client_side_https = false;
+    task->client_ssl = NULL;
+    task->client_ctx = NULL;
+    
+    task->remote_side_https = false;
+    task->remote_fd = -1;
+    task->remote_ctx = NULL;
+    task->remote_ssl = NULL;
+    
+    task->c_buffer_len = 0;
+    task->r_buffer_len = 0;
+    task->pool = sc_create_pool(SC_POOL_SIZE);
+    // if(!task->c_pool)
+    task->c_buffer = sc_alloc_buffer(task->pool, MAX_REQUEST_BUFFER_SIZE);
+    task->c_buffer_last = task->c_buffer;
+    // if(!task->c_buffer)
+    task->r_buffer = sc_alloc_buffer(task->pool, MAX_RESPONSE_BUFFER_SIZE);
+    // if(!task->r_buffer)
+
+    task->state = STATE_CLIENT_READ;
+    task->auth = false;
+
+    return task;
+}
+
+void connection_close(task_t* task, const int p_epoll_fd) {
+    if(task->req != NULL) {
+        free_request(task->req);
+    }
+
+    if(task->pool != NULL) {
+        sc_destroy_pool(task->pool);
+    }
+
+    if(task->before_client_ssl != NULL) {
+        BIO_free(task->sbio);
+        SSL_free(task->before_client_ssl);
+        SSL_CTX_free(task->before_client_ctx);
+    }
+
+    if(task->client_ssl != NULL) {
+        SSL_free(task->client_ssl);
+        SSL_CTX_free(task->client_ctx);
+    }
+
+    if(task->remote_ssl != NULL) {
+        SSL_free(task->remote_ssl);
+        SSL_CTX_free(task->remote_ctx);
+    }
+    if(task->remote_fd) {
+        pthread_mutex_lock(&mutex_lock);
+        epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+        close(task->remote_fd);
+        pthread_mutex_unlock(&mutex_lock);
+    }
+    
+    if(task->client_fd) {
+        pthread_mutex_lock(&mutex_lock);
+        epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+        close(task->client_fd);
+        pthread_mutex_unlock(&mutex_lock);
+    }
+    free(task);
+}
+
 int main(void) {
 
     if(init_proxy()!=STAT_OK){
@@ -149,25 +218,15 @@ int main(void) {
                         }
                     }
                     set_nonblocking(client_fd);
-
-                    task_t* task = (task_t*)malloc(sizeof(task_t));
                     
+                    task_t* task = create_task();
                     task->client_fd = client_fd;
-                    task->client_side_https = false;
-                    task->client_ssl = NULL;
-                    task->client_ctx = NULL;
-                    task->remote_fd = -1;
-                    task->remote_ctx = NULL;
-                    task->remote_ssl = NULL;
-                    task->remote_side_https = false;
-                    task->buffer_len = 0;
-                    task->state = STATE_CLIENT_READ;
-                    task->auth = false;
                     ev.events = EPOLLIN|EPOLLRDHUP;
                     ev.data.ptr = task;
+
                     pthread_mutex_lock(&mutex_lock); 
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
-                    pthread_mutex_unlock(&mutex_lock); 
+                    pthread_mutex_unlock(&mutex_lock);
                 }
             } else {
                 task_t* task = (task_t*)events[i].data.ptr;

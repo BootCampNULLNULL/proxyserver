@@ -4,11 +4,12 @@
 #define MAX_EVENTS 1000
 #define DEFUALT_HTTPS_PORT 443
 #define DEFUALT_HTTP_PORT 80
-#define CERT_FILE "/home/sgseo/proxyserver/certificate.pem" // 인증서 파일 경로
-#define KEY_FILE  "/home/sgseo/proxyserver/private_key.pem"  // 키 파일 경로
+#define CERT_FILE "/home/ubuntu/securezone/certificate.pem" // 인증서 파일 경로
+#define KEY_FILE  "/home/ubuntu/securezone/private_key.pem"  // 키 파일 경로
 #define MAX_BUFFER_SIZE 4096
 #include "http.h"
 #include "util.h"
+#include "sc_mem_pool.h"
 
 typedef enum task_state_t {
     STATE_INITIAL_READ, //CLIENT<->PROXY 프로토콜 파싱
@@ -40,8 +41,16 @@ typedef struct task_t {
     SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     BIO* sbio;
-    char buffer[MAX_BUFFER_SIZE];
-    int buffer_len;
+    // char buffer[MAX_BUFFER_SIZE];
+
+    sc_pool_t *pool;
+    sc_buf_t* c_buffer; // 요청 버퍼
+    sc_buf_t* c_buffer_last;
+    
+    sc_buf_t* r_buffer; // 응답 버퍼
+
+    int c_buffer_len;
+    int r_buffer_len;
     HTTPRequest* req;
     task_state_t state;
     bool auth;
@@ -65,5 +74,8 @@ typedef struct thread_cond_t{
     int busy;
     pthread_cond_t *cond;
 }thread_cond_t;
+
+task_t* create_task();
+void connection_close(task_t* task, const int p_epoll_fd);
 
 #endif //CLIENT_SIDE
