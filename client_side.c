@@ -69,6 +69,8 @@ task_t* create_task() {
     
     task->c_buffer_len = 0;
     task->r_buffer_len = 0;
+
+    // 메모리풀 할당당
     task->pool = sc_create_pool(SC_POOL_SIZE);
     // if(!task->c_pool)
     task->c_buffer = sc_alloc_buffer(task->pool, MAX_REQUEST_BUFFER_SIZE);
@@ -76,6 +78,9 @@ task_t* create_task() {
     // if(!task->c_buffer)
     task->r_buffer = sc_alloc_buffer(task->pool, MAX_RESPONSE_BUFFER_SIZE);
     // if(!task->r_buffer)
+    
+    task->parser = NULL;
+    task->parse_state = HTTP_STATE_INIT;
 
     task->state = STATE_CLIENT_READ;
     task->auth = false;
@@ -84,8 +89,8 @@ task_t* create_task() {
 }
 
 void connection_close(task_t* task, const int p_epoll_fd) {
-    if(task->req != NULL) {
-        free_request(task->req);
+    if(task->parser != NULL) {
+        free_parser(task->parser);
     }
 
     if(task->pool != NULL) {

@@ -290,6 +290,35 @@ int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const ch
     return STAT_OK;
 }
 
+int alpn_select_cb(SSL *ssl,
+    const unsigned char **out,
+    unsigned char *outlen,
+    const unsigned char *in,
+    unsigned int inlen,
+    void *arg)
+{
+    static const unsigned char alpn_http_1_1[] = { 8, 'h', 't', 't', 'p', '/', '1', '.', '1' };
+
+    // 클라이언트가 보낸 ALPN 목록을 확인
+    for (unsigned int i = 0; i < inlen; ) {
+        unsigned int len = in[i]; // 프로토콜 길이
+        if (i + len + 1 > inlen) {
+            // LOG(DEBUG, "");
+            return SSL_TLSEXT_ERR_NOACK; // 잘못된 데이터
+        }
+
+        if (len == sizeof(alpn_http_1_1) - 1 &&
+            memcmp(&in[i + 1], alpn_http_1_1 + 1, len) == 0) {
+            *out = alpn_http_1_1 + 1;
+            *outlen = len;
+            return SSL_TLSEXT_ERR_OK;
+        }
+
+        i += len + 1; // 다음 프로토콜 확인
+    }
+
+    return SSL_TLSEXT_ERR_NOACK; // HTTP/1.1이 없으면 ALPN 협상 실패
+}
 
 
 /**
@@ -361,6 +390,8 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
     if(!SSL_CTX_use_PrivateKey(*ctx,ssl_key)){
         return STAT_FAIL;
     }
+
+    SSL_CTX_set_alpn_select_cb(*ctx, alpn_select_cb, NULL);
 
     *ssl = SSL_new(*ctx);
     return STAT_OK;

@@ -1,4 +1,5 @@
 #include "sc_mem_pool.h"
+#include "log.h"
 
 // 메모리풀 할당
 sc_pool_t *sc_create_pool(size_t size) {
@@ -21,7 +22,7 @@ void *sc_palloc(sc_pool_t *pool, size_t size) {
         // 메모리풀 용량 초과
         if (!pool->next) {
             pool->next = sc_create_pool(SC_POOL_SIZE);
-            printf("추가 메모리 풀 할당 (크기: %ld 바이트)\n", SC_POOL_SIZE);
+            LOG(DEBUG, "추가 메모리 풀 할당 (크기: %ld 바이트)\n", SC_POOL_SIZE);
         }
         pool = pool->next;
     }

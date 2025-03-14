@@ -280,6 +280,7 @@ int recv_data(task_t* task, int epoll_fd)
     while (1) {
         size_t available_space = task->c_buffer_last->end - task->c_buffer_last->last; // 초기 값은 4096
 
+        // 남은 공간 계산
         if (available_space == 0) {
             sc_buf_t *new_buf = sc_alloc_buffer(task->pool, DEFAULT_MEM_BLOCK_SIZE);
             if (!new_buf) {
@@ -291,9 +292,10 @@ int recv_data(task_t* task, int epoll_fd)
             available_space = task->c_buffer_last->end - task->c_buffer_last->last;
         }
 
+        // 버퍼 끝 부분을 남은 공간만큼 recv
         int received = recv(task->client_fd, task->c_buffer_last->last, available_space, 0);
         if (received > 0) {
-            // 데이터 처리
+            // 버퍼 상태 업데이트
             task->c_buffer_len = task->c_buffer_len + received;
             task->c_buffer_last->last = task->c_buffer_last->last + received;
             continue;
@@ -367,51 +369,58 @@ int client_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
     // http 요청 로깅
 
     // http 요청 파싱
-    task->req = read_request(task->c_buffer);
-    if(task->req==NULL)
-    {
-        //error 처리 필요
+    if(task->parser == NULL) {
+        task->parser = create_parser(task->c_buffer);
+    }
+    
+    if((task->parse_state = parse_http_request(task->parser)) == HTTP_PARSE_CONTINUE) {
+        // 이벤트 넘기고 다시 recv, 카운팅 필요
+        task->state = STATE_CLIENT_READ;
+        return STAT_AGAIN;
+    } else {
+        if(task->parse_state == HTTP_STATE_ERROR) {
+            connection_close(task, epoll_fd);
+            return STAT_FAIL;
+        }
+        
+        //method CONNECT 일때
+        if(str7_cmp(task->parser->request->method.start, 'C', 'O', 'N', 'N', 'E', 'C', 'T') == true) {
+#if 1
+        task_arg_t *arg = (task_arg_t*)calloc(1,sizeof(task_arg_t));
+        arg->task = (task_t*)calloc(1,sizeof(task_t));
+        memcpy(arg->task, task, sizeof(task_t));
+        arg->epoll_fd = epoll_fd;
+        arg->ev = &ev;
+        pthread_t thread;
+        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+        pthread_create(&thread, NULL, client_connect_req_process, arg);
+        pthread_detach(thread);
+        return;
+#else
+        return client_connect_req(task, epoll_fd, ev);
+#endif
+        }
+
+        if(task->parser->request->port == -1) {
+            task->parser->request->port = DEFUALT_HTTP_PORT;
+        }
+        // remote 연결
+        task->remote_fd = connect_remote_http(task->parser->request->s_host, task->parser->request->port);
+        LOG(INFO,"remote connection success\n");
+        
+        task->state = STATE_REMOTE_WRITE;
+        ev->events = EPOLLOUT;
+        ev->data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유 
+        pthread_mutex_lock(&mutex_lock); 
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
+        pthread_mutex_unlock(&mutex_lock);
+        
+        // free(req);
         return STAT_OK;
     }
-    //method CONNECT 일때
-
-    if(!strncmp(task->req->method.start,"CONNECT", 7)){
-
-#if 1
-    task_arg_t *arg = (task_arg_t*)calloc(1,sizeof(task_arg_t));
-    arg->task = (task_t*)calloc(1,sizeof(task_t));
-    memcpy(arg->task, task, sizeof(task_t));
-    arg->epoll_fd = epoll_fd;
-    arg->ev = &ev;
-    pthread_t thread;
-    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-    pthread_create(&thread, NULL, client_connect_req_process, arg);
-    pthread_detach(thread);
-    return;
     
-#else
-    return client_connect_req(task, epoll_fd, ev);
-#endif
-    }
     // url db 조회 -> 필터링 
 
-    if(task->req->port == -1) {
-        task->req->port = DEFUALT_HTTP_PORT;
-    }
-    // remote 연결
-    task->remote_fd = connect_remote_http(task->req->s_host, task->req->port);
-    LOG(INFO,"remote connection success\n");
-    
-    task->state = STATE_REMOTE_WRITE;
-    ev->events = EPOLLOUT ;
-    ev->data.ptr = task;     // remote 소켓은 client 소켓의 task 구조체 공유 
-    pthread_mutex_lock(&mutex_lock); 
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
-    pthread_mutex_unlock(&mutex_lock); 
-
-    
-    // free(req);  
-    return STAT_OK;
 }
 
 /**
@@ -469,33 +478,47 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
     LOG(DEBUG,"Data received from client: %d bytes\n", task->c_buffer_len);
     LOG(DEBUG,"%s\n", task->c_buffer->start);
 
-    // free_request(task->req); !
-    task->req = read_request(task->c_buffer); // buf 구조체 넘기는 식으로 수정 필요
-    if(task->req){
-        if(!strncmp(task->req->method.start,"CONNECT",7))
+    if(task->parser == NULL) {
+        task->parser = create_parser(task->c_buffer);
+    }
+
+    // 메소드가 CONNECT가 아니면 SSL 세션 맺은 이후 새로운 요청이므로 기존 파서는 free
+    if(str7_cmp(task->parser->request->method.start, 'C', 'O', 'N', 'N', 'E', 'C', 'T') != true) {
+        free_parser(task->parser);
+        task->parser = create_parser(task->c_buffer);
+    }
+
+    if((task->parse_state = parse_http_request(task->parser)) == HTTP_PARSE_CONTINUE) {
+        // 이벤트 넘기고 다시 recv, 카운팅 필요
+        task->state = STATE_CLIENT_READ;
+        return STAT_AGAIN;
+    } else {
+        if(task->parse_state == HTTP_STATE_ERROR) {
+            connection_close(task, epoll_fd);
+            return STAT_FAIL;
+        }
+
+        if(!strncmp(task->parser->request->method.start,"CONNECT",7))
         {
             //client <-https-> proxy <-https-> remote인 경우
             //SSL 암호화 연결 상태에서 CONNECT method 처리
             return client_connect_req_with_ssl(task, epoll_fd, ev);
         }
 
-        if(task->req->port == -1) {
-            task->req->port = DEFUALT_HTTPS_PORT;
+        if(task->parser->request->port == -1) {
+            task->parser->request->port = DEFUALT_HTTPS_PORT;
         }
+        
+        task->state = STATE_REMOTE_WRITE;
+        ev->events = EPOLLOUT;
+        ev->data.ptr = task;
+        pthread_mutex_lock(&mutex_lock); 
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
+        pthread_mutex_unlock(&mutex_lock);
+        
+        // free(req);
+        return STAT_OK;
     }
-    else{
-        task->req = (HTTPRequest*)calloc(1, sizeof(HTTPRequest));
-        task->req->port = DEFUALT_HTTPS_PORT;
-    }
-
-    task->state = STATE_REMOTE_WRITE;
-    ev->events = EPOLLOUT ;
-    ev->data.ptr = task;
-    pthread_mutex_lock(&mutex_lock); 
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task->remote_fd, ev);
-    pthread_mutex_unlock(&mutex_lock);
-    
-    return STAT_OK;
 }
 
 /**
@@ -880,7 +903,7 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     // url db 조회 -> 필터링 
 
     // CONNECT => ssl connect => GET or POST 요청 recv
-    task->remote_fd = connect_remote_http(task->req->s_host, task->req->port);
+    task->remote_fd = connect_remote_http(task->parser->request->s_host, task->parser->request->port);
     // remote ssl 연결
     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
     if(task->remote_ssl==NULL)
@@ -898,9 +921,9 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     // if(task->req->port == -1) {
     //     task->req->port = DEFUALT_HTTPS_PORT;
     // }
-    LOG(DEBUG,"Host: %s\n", task->req->host); // 호스트 이름 출력
-    LOG(DEBUG,"Port: %d\n", task->req->port); // 포트 출력
-    LOG(DEBUG,"CONNECT request for %s:%d\n", task->req->host, task->req->port);
+    LOG(DEBUG,"Host: %s\n", task->parser->request->host); // 호스트 이름 출력
+    LOG(DEBUG,"Port: %d\n", task->parser->request->port); // 포트 출력
+    LOG(DEBUG,"CONNECT request for %s:%d\n", task->parser->request->host, task->parser->request->port);
 #if 0 /*TO-DO 인증 방식 추가*/
     // client HTTP/1.1 RFC 7235 (Authentication) 
     const char *response = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"Proxy Server\"\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 80\r\n\r\n<html><body><h1>407 Proxy Authentication Required</h1></body></html>\r\n";
@@ -911,7 +934,7 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     send(task->client_fd, response, strlen(response), 0);
 #endif
-    if(setup_ssl_cert(task->req->s_host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
+    if(setup_ssl_cert(task->parser->request->s_host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
     // set_blocking(task->client_fd);
@@ -952,7 +975,7 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     // url db 조회 -> 필터링 
 
     // CONNECT => ssl connect => GET or POST 요청 recv
-    task->remote_fd = connect_remote_http(task->req->s_host, task->req->port);
+    task->remote_fd = connect_remote_http(task->parser->request->s_host, task->parser->request->port);
     // remote ssl 연결
     task->remote_ssl = connect_remote_https(task->remote_fd, task->remote_ctx);
     if(task->remote_ssl==NULL)
@@ -967,9 +990,9 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     task->client_side_https = true;
     task->remote_side_https = true;
 
-    LOG(DEBUG,"Host: %s\n", task->req->host); // 호스트 이름 출력
-    LOG(DEBUG,"Port: %d\n", task->req->port); // 포트 출력
-    LOG(DEBUG,"CONNECT request for %s:%d\n", task->req->host, task->req->port);
+    LOG(DEBUG,"Host: %s\n", task->parser->request->host); // 호스트 이름 출력
+    LOG(DEBUG,"Port: %d\n", task->parser->request->port); // 포트 출력
+    LOG(DEBUG,"CONNECT request for %s:%d\n", task->parser->request->host, task->parser->request->port);
 #if 0 /*TO-DO 인증 방식 추가*/
     // client HTTP/1.1 RFC 7235 (Authentication) 
     const char *response = "HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"My Proxy Server\"\r\nContent-Length: 0\r\n\r\n";
@@ -981,7 +1004,7 @@ int client_connect_req_with_ssl(task_t* task, int epoll_fd, struct epoll_event *
     // client ssl 연결
     const char *response = "HTTP/1.1 200 Connection Established\r\n\r\n";
     SSL_write(task->before_client_ssl, response, strlen(response));
-    if(setup_ssl_cert(task->req->s_host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
+    if(setup_ssl_cert(task->parser->request->s_host, ca_key, ca_cert, &task->client_ctx, &task->client_ssl)){
         exit(1);
     }
     task->sbio = BIO_new(BIO_f_ssl());

@@ -46,12 +46,15 @@ typedef struct task_t {
     sc_pool_t *pool;
     sc_buf_t* c_buffer; // 요청 버퍼
     sc_buf_t* c_buffer_last;
-    
+
     sc_buf_t* r_buffer; // 응답 버퍼
 
     int c_buffer_len;
     int r_buffer_len;
-    HTTPRequest* req;
+    //HTTPRequest* req;
+    HTTPRequestParser* parser;
+    HTTPParseResult parse_state;
+
     task_state_t state;
     bool auth;
     time_t current_time;

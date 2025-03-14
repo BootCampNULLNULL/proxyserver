@@ -19,6 +19,8 @@ int load_certificate(const char *cert_file, X509 **cert);
 EVP_PKEY *generate_rsa_key();
 X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_PKEY* ca_key, int is_root);
 int save_cert_and_key(X509 *cert, EVP_PKEY *key, const char *cert_path, const char *key_path);
+int alpn_select_cb(SSL *ssl, const unsigned char **out, unsigned char *outlen, const unsigned char *in,
+    unsigned int inlen, void *arg);
 SSL* handle_client_SSL_conn(int client_sock, 
 char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx);
 SSL* client_proxy_SSL_conn(int cfd, SSL_CTX** ctx);

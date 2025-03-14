@@ -29,146 +29,263 @@ char *trim_whitespace(char *str) {
     return str;
 }
 
-// 쿼리 파라미터를 파싱하는 함수
-// void parse_query_params(char *query_start, size_t length, HTTPRequest *request) {
-//     char *end = query_start + length;
-//     char *param_start = query_start;
-//     while (param_start < end) {
-//         char *equal = memchr(param_start, '=', end - param_start);
-//         if (!equal) break;
-//         char *amp = memchr(equal, '&', end - equal);
 
-//         HTTPQueryParam *query_param = malloc(sizeof(HTTPQueryParam));
-//         query_param->name.start = param_start;
-//         query_param->name.length = equal - param_start;
+HTTPRequestParser *create_parser(sc_buf_t *buf) {
+    HTTPRequestParser *parser = (HTTPRequestParser *)malloc(sizeof(HTTPRequestParser));
+    if (!parser) return NULL;
+    
+    parser->request = (HTTPRequest *)malloc(sizeof(HTTPRequest));
+    if (!parser->request) {
+        free(parser);
+        return NULL;
+    }
+    memset(parser->request, 0, sizeof(HTTPRequest));
 
-//         if (amp) {
-//             query_param->value.start = equal + 1;
-//             query_param->value.length = amp - (equal + 1);
-//             param_start = amp + 1;
-//         } else {
-//             query_param->value.start = equal + 1;
-//             query_param->value.length = end - (equal + 1);
-//             param_start = end;
-//         }
+    parser->cur_buf = buf;
+    parser->pos = buf->pos;
+    parser->last = buf->last;
+    parser->state = HTTP_STATE_METHOD;
 
-//         query_param->next = request->query;
-//         request->query = query_param;
-//     }
-// }
+    return parser;
+}
 
-void read_request_line(sc_buf_t *buf, HTTPRequest *request) {
-    char *pos = buf->pos;  // 현재 위치 포인터
-    char *end = buf->last; // 버퍼 끝 위치
+void free_parser(HTTPRequestParser *parser) {
+    if (!parser) return;
+    free_request(parser->request);
+    free(parser);
+}
 
-    char *method_end = NULL;   // HTTP 메서드 끝 위치 (첫 번째 공백)
-    char *url_end = NULL;      // 요청 URL 끝 위치 (두 번째 공백)
-    char *request_line_end = NULL; // 요청 라인 끝 위치 (\r\n)
+HTTPParseResult parse_http_request(HTTPRequestParser *parser) {
+    if (!parser || !parser->cur_buf) return HTTP_PARSE_ERROR;
 
-    // 한 번의 루프에서 요청 라인을 파싱
-    for (; pos < end; pos++) {
-        if (*pos == ' ') {
-            if (!method_end) {
-                method_end = pos;  // 첫 번째 공백 (메서드 끝)
-            } else if (!url_end) {
-                url_end = pos;  // 두 번째 공백 (URL 끝)
-            }
-        } else if (*pos == '\r' && (pos + 1 < end) && *(pos + 1) == '\n') {
-            request_line_end = pos;  // 요청 라인의 끝 (\r\n)
-            break;
+    while (parser->cur_buf) {
+        char *pos = parser->pos; // 현재 버퍼 위치
+        char *last = parser->last; // 마지막 버퍼 위치
+        sc_buf_t *cur_buf = parser->cur_buf; // 버퍼체인중 현재 처리할 버퍼
+
+        switch (parser->state) {
+            case HTTP_STATE_METHOD:
+                parser->request->method.start = pos;  
+                for (;;) {
+                    while (pos < last && *pos != ' ') pos++;  // 현재 버퍼에서 공백 찾기
+
+                    // 끝까지 온 경우 다음 버퍼 체인 탐색
+                    if (pos == last) {
+                        if (cur_buf->next) {  
+                            cur_buf = cur_buf->next;
+                            pos = cur_buf->start;
+                            last = cur_buf->last;
+                            continue;
+                        }
+                        return HTTP_PARSE_CONTINUE;  // 더 이상 데이터가 없으면 추가 데이터 기다림
+                    }
+
+                    parser->request->method.length = pos - parser->request->method.start;
+                    parser->state = HTTP_STATE_PATH;
+                    pos++;  // 공백 문자 넘김
+                    break;
+                }
+                break;
+
+            case HTTP_STATE_PATH:
+                parser->request->path.start = pos;
+                for(;;){
+                    while (pos < last && *pos != ' ' && *pos != '?') pos++;
+
+                    if (pos == last) {
+                        if (cur_buf->next) {
+                            cur_buf = cur_buf->next;
+                            pos = cur_buf->start;
+                            last = cur_buf->last;
+                            continue;
+                        }
+                        return HTTP_PARSE_CONTINUE;
+                    }
+
+                    // 포트 번호가 포함된 경우 파싱
+                    if (*pos == ':') {
+                        pos++;
+                        char *port_start = pos;
+
+                        while (pos < last && *pos >= '0' && *pos <= '9') pos++;  // 숫자 찾기
+
+                        if (pos == last) {
+                            if (cur_buf->next) {
+                                cur_buf = cur_buf->next;
+                                pos = cur_buf->start;
+                                last = cur_buf->last;
+                                continue;
+                            }
+                            return HTTP_PARSE_CONTINUE;
+                        }
+
+                        // 포트 길이 계산 후 숫자로 변환
+                        int port_length = pos - port_start;
+                        if (port_length > 0) {
+                            char port_buf[6] = {0};
+                            memcpy(port_buf, port_start, port_length);
+                            port_buf[port_length] = '\0';
+                            parser->request->port = atoi(port_buf);
+                        }
+                    } else {
+                        parser->request->port = -1;  // 포트 명시 안 되어 있으면 -1
+                    }
+
+                    parser->request->path.length = pos - parser->request->path.start;
+                    if (*pos == '?') {
+                        pos++;
+                        parser->state = HTTP_STATE_QUERY;
+                    } else {
+                        parser->state = HTTP_STATE_VERSION;
+                        pos++;
+                    }
+                    break;
+                }
+                break;
+
+            case HTTP_STATE_QUERY:
+                parser->request->query.start = pos;
+                for (;;) {
+                    while (pos < last && *pos != ' ') pos++;
+
+                    if (pos == last) {
+                        if (cur_buf->next) {
+                            cur_buf = cur_buf->next;
+                            pos = cur_buf->start;
+                            last = cur_buf->last;
+                            continue;
+                        }
+                        return HTTP_PARSE_CONTINUE;
+                    }
+
+                    parser->request->query.length = pos - parser->request->query.start;
+                    parser->state = HTTP_STATE_VERSION;
+                    pos++;
+                    break;
+                }
+                break;
+
+            case HTTP_STATE_VERSION:
+                for (;;) {
+                    if (last - pos < 8) {
+                        if (cur_buf->next) {
+                            cur_buf = cur_buf->next;
+                            pos = cur_buf->start;
+                            last = cur_buf->last;
+                            continue;
+                        }
+                        return HTTP_PARSE_CONTINUE;
+                    }
+
+                    if (strncmp(pos, "HTTP/1.", 7) != 0) return HTTP_PARSE_ERROR;
+                    parser->request->protocol_minor_version = pos[7] - '0';
+                    parser->state = HTTP_STATE_HEADER;
+                    pos += 8;
+                    break;
+                }
+                break;
+
+            case HTTP_STATE_HEADER:
+                while (cur_buf) {
+                    if (pos == last) {
+                        cur_buf = cur_buf->next;
+                        if (cur_buf) { pos = cur_buf->start; last = cur_buf->last; }
+                        else return HTTP_PARSE_CONTINUE;
+                    }
+                    // 헤더 끝 감지(\r\n\r\n)
+                    if (*pos == '\r' && (pos + 1 < last) && *(pos + 1) == '\n') {
+                        pos += 2; // 첫 번째 CRLF 넘김
+            
+                        // 다음 문자가 또 CRLF라면 헤더가 끝났음 -> 본문으로 이동
+                        if (*pos == '\r' && (pos + 1 < last) && *(pos + 1) == '\n') {
+                            parser->state = HTTP_STATE_BODY;
+                            pos += 2; // 최종적으로 \r\n\r\n 넘김
+                            break;
+                        }
+                    }
+
+                    HTTPHeaderField *field = (HTTPHeaderField *)malloc(sizeof(HTTPHeaderField));
+                    if (!field) return HTTP_PARSE_ERROR;
+
+                    // HTTPHeaderField 리스트는 마지막에 파싱된 헤더가 head 노드가 됨
+                    field->next = parser->request->header;
+                    parser->request->header = field;
+
+                    // 헤더 이름 파싱
+                    field->name.start = pos;
+                    while (pos < last && *pos != ':') pos++;
+                    if (pos == last) return HTTP_PARSE_CONTINUE;
+                    field->name.length = pos - field->name.start;
+                    pos++;
+
+                    // 헤더의 값 앞 공백 제거
+                    while (pos < last && (*pos == ' ' || *pos == '\t')) pos++;
+
+                    // 헤더 값 파싱
+                    field->value.start = pos;
+                    while (pos < last && *pos != '\r') pos++;
+                    if (pos == last) return HTTP_PARSE_CONTINUE;
+                    field->value.length = pos - field->value.start;
+
+                    // pos += 2;
+                }
+                break;
+
+            case HTTP_STATE_BODY:
+                parser->request->body.start = pos;
+                parser->request->body.length = 0;
+                for (;;) {
+                    parser->request->body.length += last - pos; // 버퍼 체인을 서치하며 body length 값 업데이트
+                    if (!cur_buf->next) break;
+                    cur_buf = cur_buf->next;
+                    pos = cur_buf->start;
+                    last = cur_buf->last;
+                }
+                
+                // 파싱 완료
+                parser->state = HTTP_STATE_DONE;
+
+                // host 문자열 변환
+                HTTPHeaderField *host_header = find_header(parser->request, "Host");
+                if(host_header != NULL) {
+                    char* colon_pos = memchr(host_header->value.start, ':', host_header->value.length);
+                    if(colon_pos) {
+                        host_header->value.length = colon_pos - host_header->value.start;
+                    }
+                    parser->request->s_host = HTTPString_to_value(host_header->value);
+                }
+
+                return HTTP_PARSE_OK;
+
+            case HTTP_STATE_DONE:
+                return HTTP_PARSE_OK;
+
+            case HTTP_STATE_ERROR:
+                return HTTP_PARSE_ERROR;
         }
+
+        parser->pos = pos;
+        parser->cur_buf = cur_buf;
     }
 
-    // HTTP 메서드 저장
-    request->method.start = buf->pos;
-    request->method.length = method_end - buf->pos;
-
-    // URL 및 쿼리 문자열 저장
-    char *url_start = method_end + 1;
-    char *query_start = memchr(url_start, '?', url_end - url_start);
-
-    if (query_start) {
-        request->query.start = query_start;
-        request->query.length = query_start - url_start;
-    } else {
-        request->path.start = url_start;
-        request->path.length = url_end - url_start;
-    }
-
-    // HTTP 버전 확인
-    if (strncmp(url_end + 1, "HTTP/1.", 7) == 0) {
-        request->protocol_minor_version = url_end[8] - '0';
-    }
-
-    // 요청 라인의 끝(\r\n 이후)으로 이동
-    if (request_line_end) {
-        buf->pos = request_line_end + 2;
-    }
+    return HTTP_PARSE_CONTINUE;
 }
 
-
-void read_header_field(sc_buf_t *buf, size_t length, HTTPRequest *request) {
-    char *colon = memchr(buf->pos, ':', length);
-    if (!colon) return;
-
-    HTTPHeaderField *field = malloc(sizeof(HTTPHeaderField));
-    field->name.start = buf->pos;
-    field->name.length = colon - buf->pos;
-
-    char *value_start = colon + 1;
-    while (*value_start == ' ' && (value_start - buf->pos) < length) value_start++;
-    field->value.start = value_start;
-    field->value.length = (buf->pos + length) - value_start;
-
-    // 가장 마지막에 추가된 헤더가 리스트의 헤더노드가 됨
-    field->next = request->header;
-    request->header = field;
-}
-
-HTTPRequest *read_request(sc_buf_t *buf) {
-    HTTPRequest *request = malloc(sizeof(HTTPRequest));
-
-    read_request_line(buf, request);
-
-    while (buf->pos < buf->last) {
-        char *line_end = memchr(buf->pos, '\r', buf->last - buf->pos);
-        if (!line_end || line_end == buf->pos) break;
-        read_header_field(buf, line_end - buf->pos, request);
-        buf->pos = line_end + 2;
-    }
-
-    buf->pos += 2;
-    request->body.start = buf->pos;
-    request->body.length = buf->last - buf->pos;
-
-    parse_host_and_port(request);
-    request->s_host = HTTPString_to_value(request->host);
-    buf->pos = buf->start;
-    return request;
-}
-
-void parse_host_and_port(HTTPRequest *request) {
+// 특정 헤더 탐색
+HTTPHeaderField *find_header(HTTPRequest *request, const char *header_name) {
     HTTPHeaderField *header = request->header;
-    while (header) {
-        if (header->name.length == 4 && strncasecmp(header->name.start, "Host", 4) == 0) {
-            request->host.start = header->value.start;
-            request->host.length = header->value.length;
+    size_t name_len = strlen(header_name);
 
-            char *colon = memchr(request->host.start, ':', request->host.length);
-            if (colon) {
-                request->port = atoi(colon + 1);
-                request->host.length = colon - request->host.start;
-            } else {
-                request->port = 80;
-            }
-            return;
+    while (header) {
+        if (header->name.length == name_len && strncasecmp(header->name.start, header_name, name_len) == 0) {
+            return header;  // 일치하는 헤더를 찾으면 반환
         }
         header = header->next;
     }
-    request->port = 80;
+    return NULL;  // 해당 헤더를 찾지 못하면 NULL 반환
 }
 
-// 호출자쪽에서 사용 후 적절히 free 필요
+// 호출자쪽에서 free 필요
 char *HTTPString_to_value(HTTPString str) {
     if (!str.start || str.length == 0) {
         return NULL;
@@ -187,12 +304,6 @@ char *HTTPString_to_value(HTTPString str) {
 }
 
 void free_request(HTTPRequest *request) {
-    // HTTPQueryParam *query = request->query;
-    // while (query) {
-    //     HTTPQueryParam *next = query->next;
-    //     free(query);
-    //     query = next;
-    // }
 
     HTTPHeaderField *header = request->header;
     while (header) {

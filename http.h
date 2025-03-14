@@ -29,6 +29,24 @@ typedef enum Req_Method_State {
     DEFAULT
 } Req_Method_State;
 
+typedef enum {
+    HTTP_STATE_INIT,
+    HTTP_STATE_METHOD,
+    HTTP_STATE_PATH,
+    HTTP_STATE_QUERY,
+    HTTP_STATE_VERSION,
+    HTTP_STATE_HEADER,
+    HTTP_STATE_BODY,
+    HTTP_STATE_DONE,
+    HTTP_STATE_ERROR
+} HTTPParseState;
+
+typedef enum {
+    HTTP_PARSE_CONTINUE,
+    HTTP_PARSE_OK,
+    HTTP_PARSE_ERROR
+} HTTPParseResult;
+
 typedef struct HTTPString {
     char *start;
     size_t length;
@@ -60,19 +78,24 @@ typedef struct HTTPRequest {
     char* s_host;
 } HTTPRequest;
 
+typedef struct {
+    HTTPRequest *request;
+    sc_buf_t *cur_buf;
+    char *pos;
+    char *last;
+    HTTPParseState state;
+} HTTPRequestParser;
+
 char *trim_whitespace(char *str);
-void parse_query_params(char *query_start, size_t length, HTTPRequest *request);
 
-void read_request_line(sc_buf_t* buf, HTTPRequest *request);
-void read_header_field(sc_buf_t* buf, size_t length, HTTPRequest *request);
-HTTPRequest *read_request(sc_buf_t* buf);
+HTTPRequestParser *create_parser(sc_buf_t *buf);
+void free_parser(HTTPRequestParser *parser);
+HTTPParseResult parse_http_request(HTTPRequestParser *parser);
 
-void parse_host_and_port(HTTPRequest *request);
+HTTPHeaderField *find_header(HTTPRequest *request, const char *header_name);
 char *HTTPString_to_value(HTTPString str);
 void free_request(HTTPRequest *request);
 
-char* find_Host_field(HTTPHeaderField* head);
-int find_port(char* host);
 int get_IP(char* ip_str, const char* hostname, int port);
 
 #endif //HTTP
