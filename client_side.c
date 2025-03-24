@@ -49,7 +49,9 @@ pthread_mutex_t async_mutex = PTHREAD_MUTEX_INITIALIZER;
 //thread task
 task_arg_t *task_arg;
 
-
+closed_task_node_t* closed_task_list_head = NULL;
+closed_task_node_t* closed_task_list_tail = NULL;
+pthread_mutex_t closed_task_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //
 pthread_mutex_t mutex_lock= PTHREAD_MUTEX_INITIALIZER; 
@@ -61,6 +63,8 @@ task_t* create_task() {
     task->client_side_https = false;
     task->client_ssl = NULL;
     task->client_ctx = NULL;
+    task->before_client_ctx = NULL;
+    task->before_client_ssl = NULL;
     
     task->remote_side_https = false;
     task->remote_fd = -1;
@@ -70,62 +74,226 @@ task_t* create_task() {
     task->c_buffer_len = 0;
     task->r_buffer_len = 0;
 
-    // 메모리풀 할당당
+    // 메모리풀 할당
     task->pool = sc_create_pool(SC_POOL_SIZE);
     // if(!task->c_pool)
     task->c_buffer = sc_alloc_buffer(task->pool, MAX_REQUEST_BUFFER_SIZE);
     task->c_buffer_last = task->c_buffer;
     // if(!task->c_buffer)
     task->r_buffer = sc_alloc_buffer(task->pool, MAX_RESPONSE_BUFFER_SIZE);
+    task->r_buffer_last = task->r_buffer;
+    task->r_buffer_len = 0;
+    task->r_total_len = 0;
     // if(!task->r_buffer)
     
     task->parser = NULL;
     task->parse_state = HTTP_STATE_INIT;
 
+    task->closed = false;
+    task->close_cnt = 0;
     task->state = STATE_CLIENT_READ;
     task->auth = false;
 
     return task;
 }
 
-void connection_close(task_t* task, const int p_epoll_fd) {
+
+// void cleanup_task_later(task_t* task) {
+//     closed_task_node_t* node = (closed_task_node_t*)malloc(sizeof(closed_task_node_t));
+//     node->task = task;
+//     node->next = NULL;
+
+//     pthread_mutex_lock(&closed_task_mutex);
+//     if (closed_task_list_tail == NULL) {
+//         closed_task_list_head = node;
+//         closed_task_list_tail = node;
+//     } else {
+//         closed_task_list_tail->next = node;
+//         closed_task_list_tail = node;
+//     }
+//     pthread_mutex_unlock(&closed_task_mutex);
+// }
+
+void task_cleanup(task_t* task, const int p_epoll_fd, cleanup_mode_t mode) {
+    // 먼저 열려있던 fd, SSL 등 자원은 닫고 초기화
+    
     if(task->parser != NULL) {
         free_parser(task->parser);
+        task->parser = NULL;
     }
 
     if(task->pool != NULL) {
         sc_destroy_pool(task->pool);
+        task->pool = sc_create_pool(SC_POOL_SIZE);
+        task->c_buffer = sc_alloc_buffer(task->pool, MAX_REQUEST_BUFFER_SIZE);
+        task->c_buffer_last = task->c_buffer;
+        // if(!task->c_buffer)
+        task->r_buffer = sc_alloc_buffer(task->pool, MAX_RESPONSE_BUFFER_SIZE);
+        task->r_buffer_last = task->r_buffer;
     }
 
     if(task->before_client_ssl != NULL) {
         BIO_free(task->sbio);
         SSL_free(task->before_client_ssl);
         SSL_CTX_free(task->before_client_ctx);
+        task->before_client_ssl = NULL;
+        task->before_client_ctx = NULL;
+        task->sbio = NULL;
     }
 
     if(task->client_ssl != NULL) {
+        SSL_shutdown(task->client_ssl);
         SSL_free(task->client_ssl);
         SSL_CTX_free(task->client_ctx);
+        task->client_ssl = NULL;
+        task->client_ctx = NULL;
     }
 
     if(task->remote_ssl != NULL) {
+        SSL_shutdown(task->remote_ssl);
         SSL_free(task->remote_ssl);
         SSL_CTX_free(task->remote_ctx);
+        task->remote_ssl = NULL;
+        task->remote_ctx = NULL;
     }
-    if(task->remote_fd) {
-        pthread_mutex_lock(&mutex_lock);
+
+    // remote fd는 닫고 client fd만 유지
+    if (task->remote_fd > 0) {
         epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
         close(task->remote_fd);
-        pthread_mutex_unlock(&mutex_lock);
+        task->remote_fd = -1;
     }
+
+    // 커넥션 종료
+    if (mode == CLEANUP_FULL_CLOSE) {
+        if (task->client_fd > 0) {
+            epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+            close(task->client_fd);
+            task->client_fd = -1;
+        }
+        task->closed = 1;
+        // 정리 대기 큐에 추가
+        closed_task_node_t* node = (closed_task_node_t*)malloc(sizeof(closed_task_node_t));
+        node->task = task;
+        node->next = NULL;
+
+        pthread_mutex_lock(&closed_task_mutex);
+        if (closed_task_list_tail == NULL) {
+            closed_task_list_head = node;
+            closed_task_list_tail = node;
+        } else {
+            closed_task_list_tail->next = node;
+            closed_task_list_tail = node;
+        }
+        pthread_mutex_unlock(&closed_task_mutex);
+        return;
+    }
+
+    // 커넥션 유지, task만 초기화
+    int client_fd = task->client_fd;
+
+    // 유지할 값들은 복원
+    task->client_fd = client_fd;
+
+    task->client_side_https = false;
+    task->client_ssl = NULL;
+    task->client_ctx = NULL;
+    task->before_client_ctx = NULL;
+    task->before_client_ssl = NULL;
     
-    if(task->client_fd) {
-        pthread_mutex_lock(&mutex_lock);
-        epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-        close(task->client_fd);
-        pthread_mutex_unlock(&mutex_lock);
+    task->remote_side_https = false;
+    task->remote_fd = -1;
+    task->remote_ctx = NULL;
+    task->remote_ssl = NULL;
+    
+    task->c_buffer_len = 0;
+    task->r_buffer_len = 0;
+    task->r_total_len = 0;
+
+    task->parser = NULL;
+    task->parse_state = HTTP_STATE_INIT;
+
+    task->closed = false;
+    task->close_cnt = 0;
+    task->state = STATE_CLIENT_READ;
+    task->auth = false;
+
+    return;
+}
+
+void connection_close(task_t* task, const int p_epoll_fd) {
+    LOG(DEBUG,"Connection closed\n");
+    task_cleanup(task, p_epoll_fd, CLEANUP_FULL_CLOSE);
+}
+
+void connection_reuse(task_t* task, const int p_epoll_fd, struct epoll_event *ev) {
+    LOG(DEBUG,"Connection Reuse\n");
+    task_cleanup(task, p_epoll_fd, CLEANUP_REMOTE_ONLY);
+    ev->events = EPOLLIN|EPOLLRDHUP;
+    ev->data.ptr = task;
+
+    pthread_mutex_lock(&mutex_lock);
+    epoll_ctl(p_epoll_fd, EPOLL_CTL_ADD, task->client_fd, ev);
+    pthread_mutex_unlock(&mutex_lock);
+}
+
+// void connection_close(task_t* task, const int p_epoll_fd) {
+//     LOG(DEBUG,"Connection Close\n");
+//     if(task->parser != NULL) {
+//         free_parser(task->parser);
+//     }
+
+//     if(task->pool != NULL) {
+//         sc_destroy_pool(task->pool);
+//     }
+
+//     if(task->before_client_ssl != NULL) {
+//         BIO_free(task->sbio);
+//         SSL_free(task->before_client_ssl);
+//         SSL_CTX_free(task->before_client_ctx);
+//     }
+
+//     if(task->client_ssl != NULL) {
+//         SSL_shutdown(task->client_ssl);
+//         SSL_free(task->client_ssl);
+//         SSL_CTX_free(task->client_ctx);
+//     }
+
+//     if(task->remote_ssl != NULL) {
+//         SSL_shutdown(task->remote_ssl);
+//         SSL_free(task->remote_ssl);
+//         SSL_CTX_free(task->remote_ctx);
+//     }
+
+//     if(task->remote_fd > 0) {
+//         epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+//         close(task->remote_fd);
+//         task->remote_fd = -1;
+//     }
+
+//     if(task->client_fd > 0) {
+//         epoll_ctl(p_epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+//         close(task->client_fd);
+//         task->client_fd = -1;
+//     }
+
+//     task->closed = true;
+//     cleanup_task_later(task);   // free 대신 지연 정리 요청
+// }
+
+void cleanup_closed_tasks() {
+    pthread_mutex_lock(&closed_task_mutex);
+    closed_task_node_t* current = closed_task_list_head;
+    while (current != NULL) {
+        closed_task_node_t* next = current->next;
+        task_t* task = current->task;
+        free(task);    // 여기서 안전하게 free
+        free(current);
+        current = next;
     }
-    free(task);
+    closed_task_list_head = NULL;
+    closed_task_list_tail = NULL;
+    pthread_mutex_unlock(&closed_task_mutex);
 }
 
 int main(void) {
@@ -215,7 +383,7 @@ int main(void) {
                     LOG(INFO, "new accept client fd[%d]",client_fd);
                     if(client_fd < 0) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK) {
-                            // 모든 연결이 처리됨
+                            // No more connection
                             break;
                         } else {
                             perror("Accept failed");
@@ -229,14 +397,21 @@ int main(void) {
                     ev.events = EPOLLIN|EPOLLRDHUP;
                     ev.data.ptr = task;
 
-                    pthread_mutex_lock(&mutex_lock); 
+                    pthread_mutex_lock(&mutex_lock);
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                     pthread_mutex_unlock(&mutex_lock);
                 }
             } else {
                 task_t* task = (task_t*)events[i].data.ptr;
 
-                if (!task) continue; // 안전 검사
+                if (!task || task->closed) continue; // 안전 검사
+                
+                if (events[i].events & (EPOLLRDHUP | EPOLLHUP)) {
+                    LOG(INFO,  ">> CLOSED CONNECTION c[%d] r[%d] event_count[%d]<<",task->client_fd,task->remote_fd, event_count);
+                    connection_close(task, epoll_fd);
+                    continue;
+                }
+
                 // if(task->state == STATE_INITIAL_READ){
                     
                 //     int ret = initial_read(task);
@@ -275,9 +450,10 @@ int main(void) {
                             // free(task);
                         }
                     }
+
                     LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]<<",task->client_fd,task->remote_fd, event_count);
-                    int ret = client_read(task, epoll_fd, &ev);    
-                } 
+                    int ret = client_read(task, epoll_fd, &ev);
+                }
                 else if (task->state == STATE_CLIENT_WRITE) 
                 {
                     LOG(INFO,  ">> STATE_CLIENT_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
@@ -286,41 +462,40 @@ int main(void) {
                 else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
-                    int result = 0;
-                    char strTmp[MAX_BUFFER_SIZE] = {0,};
-                    result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
-                    if(result<=0)
-                        continue;
-                    LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
-                    // int ret = remote_read(task, epoll_fd, &ev);
-#if 1
-                    for(int i=0;i<MAX_THREAD_POOL;i++){
-                        if(!thread_cond[i].busy){
-                            memset(&task_arg[i], 0, sizeof(task_arg_t));
-                            task_arg[i].epoll_fd = epoll_fd;
-                            task_arg[i].ev = &ev;
-                            task_arg[i].func = remote_read_process;
-                            task_arg[i].task = (task_t*)calloc(1,sizeof(task_t));
-                            memcpy(task_arg[i].task, task, sizeof(task_t));
-                            thread_cond[i].busy=1;
-                            LOG(INFO, "Thread [%d] IN", i);
-                            pthread_cond_signal(thread_cond[i].cond);
-                            break;
-                        }
-                        else{
-                            if(i==MAX_THREAD_POOL-1){
-                                LOG(INFO, "all thread is busy");
-                                continue;
-                            }
-                        }
-                    }
-                    pthread_mutex_lock(&mutex_lock); 
-                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
-                    pthread_mutex_unlock(&mutex_lock); 
-#else
+                   
+                    LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
                     int ret = remote_read(task, epoll_fd, &ev);
-#endif
-                } 
+                    if(ret == STAT_FAIL) {
+                        connection_reuse(task, epoll_fd, &ev);
+                    }
+// #if 1
+//                     for(int i=0;i<MAX_THREAD_POOL;i++) {
+//                         if(!thread_cond[i].busy){
+//                             memset(&task_arg[i], 0, sizeof(task_arg_t));
+//                             task_arg[i].epoll_fd = epoll_fd;
+//                             task_arg[i].ev = &ev;
+//                             task_arg[i].func = remote_read_process;
+//                             task_arg[i].task = (task_t*)calloc(1,sizeof(task_t));
+//                             memcpy(task_arg[i].task, task, sizeof(task_t));
+//                             thread_cond[i].busy=1;
+//                             LOG(INFO, "Thread [%d] IN", i);
+//                             pthread_cond_signal(thread_cond[i].cond);
+//                             break;
+//                         }
+//                         else{
+//                             if(i==MAX_THREAD_POOL-1){
+//                                 LOG(INFO, "all thread is busy");
+//                                 continue;
+//                             }
+//                         }
+//                     }
+//                     pthread_mutex_lock(&mutex_lock);
+//                     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+//                     pthread_mutex_unlock(&mutex_lock); 
+// #else
+                    // int ret = remote_read(task, epoll_fd, &ev);
+// #endif
+                }
                 else if (task->state == STATE_REMOTE_WRITE) {
                     LOG(INFO,  ">> STATE_REMOTE_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
                     int ret = remote_write(task, epoll_fd, &ev);  
@@ -332,6 +507,7 @@ int main(void) {
                 }
             }
         }
+        cleanup_closed_tasks();
     }
     close(server_fd);
     close(epoll_fd);
@@ -340,4 +516,4 @@ int main(void) {
 }
 
 // 문제점 1. STATE_CLIENT_WRITE 상태에서 클라이언트로 최종 수신 종료 이후 세션 유지 or 종료
-// 문제점 2. 응답 버퍼 크기 초과 데이터 고려 필요요
+// 문제점 2. 응답 버퍼 크기 초과 데이터 고려 필요

@@ -7,7 +7,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#define MAX_REQUEST_BUFFER_SIZE 4096
+#define MAX_REQUEST_BUFFER_SIZE 5120
 #define MAX_RESPONSE_BUFFER_SIZE 8192
 #define SC_POOL_SIZE 16384
 #define DEFAULT_MEM_BLOCK_SIZE 512
@@ -19,7 +19,7 @@ typedef struct sc_buf_s {
     char *last;          // 현재까지 저장된 위치
     char *end;           // 버퍼 끝 위치
     struct sc_buf_s *next; // 다음 버퍼 포인터
-} sc_buf_t; 
+} sc_buf_t;
 
 // 메모리풀 구조체
 typedef struct sc_pool_t {

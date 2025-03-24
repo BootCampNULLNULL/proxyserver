@@ -391,7 +391,7 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
         return STAT_FAIL;
     }
 
-    SSL_CTX_set_alpn_select_cb(*ctx, alpn_select_cb, NULL);
+    // SSL_CTX_set_alpn_select_cb(*ctx, alpn_select_cb, NULL);
 
     *ssl = SSL_new(*ctx);
     return STAT_OK;

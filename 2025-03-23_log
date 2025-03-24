@@ -1,0 +1,2644 @@
+[DEBUG][2025-03-23 19:18:09](p:165080 t:14073734)(net.c:1227) Thread[0] create 
+[DEBUG][2025-03-23 19:18:09](p:165080 t:14073721)(net.c:1227) Thread[1] create 
+[DEBUG][2025-03-23 19:18:09](p:165080 t:14073733)(net.c:1227) Thread[2] create 
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[8]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[8] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:383) Data received from client: 222 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:384) CONNECT www.youtube.com:443 HTTP/1.1
+Host: www.youtube.com:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:150) Remote[fd: 14] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1032) Host: www.youtube.com
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1034) CONNECT request for www.youtube.com:443
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:www.youtube.com
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[8] r[14] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[26]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[26] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:383) Data received from client: 218 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:384) CONNECT www.naver.com:443 HTTP/1.1
+Host: www.naver.com:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:150) Remote[fd: 32] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1032) Host: www.naver.com
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1034) CONNECT request for www.naver.com:443
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:www.naver.com
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:484) Data received from client: 1192 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:485) GET / HTTP/1.1
+Host: www.naver.com
+Connection: keep-alive
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+Sec-Purpose: prefetch;prerender
+Purpose: prefetch
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+Cookie: NNB=IVMQG76QV6GGM; ASID=af7e728f0000019096ee373b00000051; tooltip_shoppingbox_close=1; ba.uuid=02708d86-aaed-43d3-ad96-5bef7a588b26; tooltip_paging_close=1; nstore_session=j6rdfnhlh3tkX2bLjF6wZENF; nstore_pagesession=iGB4PwqW1hQBulsKsC8-473873; NAC=JA4mBgAYx6Kc; PM_CK_loc=d399494b31d0b891184636303010c4c69399f85bbc8270c60f49c9164737e370; NACT=1; NM_srt_chzzk=1; SRT30=1742719438; SRT5=1742724963; BUC=ljLMY-XvvgGhpJvuP4VOEgZnss8BY_xW6y0K0OVLmEU=
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:905) Request Buffer Length: 1192
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:918) send data: 1192
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:919) total sent bytes: 1192
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 1426
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 1426
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 6766
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 8192
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 4214
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 12406
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:768) Data received from remote: 12406 bytes
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 8192
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 12406
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 1449
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 1449
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 2529
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 3978
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 12170
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 133
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 12303
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:768) Data received from remote: 12303 bytes
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 3978
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 12170
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 12303
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 1449
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 1449
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 5800
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 7249
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 810
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 8059
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 155
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 8214
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:768) Data received from remote: 8214 bytes
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 8059
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 8214
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 1449
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 1449
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:768) Data received from remote: 1449 bytes
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 1449
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 6588
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 6588
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 4274
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 10862
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:768) Data received from remote: 10862 bytes
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[26] r[32] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 6588
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 10862
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[131]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[131] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:383) Data received from client: 222 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:150) Remote[fd: 137] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1032) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1034) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[143]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[145]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[143] r[-1] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:383) Data received from client: 222 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:150) Remote[fd: 151] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1032) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1034) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[145] r[-1] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:383) Data received from client: 220 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:384) CONNECT pm.pstatic.net:443 HTTP/1.1
+Host: pm.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:150) Remote[fd: 160] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1032) Host: pm.pstatic.net
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:1034) CONNECT request for pm.pstatic.net:443
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:pm.pstatic.net
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[131] r[137] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[145] r[160] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[131] r[137] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[131] r[137] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:484) Data received from client: 662 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:485) GET /tveta/libs/ndpsdk/prod/ndp-loader.js HTTP/1.1
+Host: ssl.pstatic.net
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+Sec-Purpose: prefetch;prerender
+sec-ch-ua-mobile: ?0
+Accept: */*
+Purpose: prefetch
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: script
+Sec-Fetch-Storage-Access: active
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:484) Data received from client: 688 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+Sec-Purpose: prefetch;prerender
+sec-ch-ua-mobile: ?0
+Accept: text/css,*/*;q=0.1
+Purpose: prefetch
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: style
+Sec-Fetch-Storage-Access: active
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[131] r[137] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:905) Request Buffer Length: 662
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:918) send data: 662
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:919) total sent bytes: 662
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:905) Request Buffer Length: 688
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:918) send data: 688
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:919) total sent bytes: 688
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[1]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 1469
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: 4814
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:750) total read bytes: 6283
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:768) Data received from remote: 6283 bytes
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[143] r[151] event_count[3]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:560) total sent bytes: 6283
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[145] r[160] event_count[3]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[3]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[145] r[160] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:484) Data received from client: 618 bytes
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:485) GET /resources/css/main.bd933956.css HTTP/1.1
+Host: pm.pstatic.net
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+Accept: text/css,*/*;q=0.1
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: style
+Sec-Fetch-Storage-Access: active
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[145] r[160] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:905) Request Buffer Length: 618
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:918) send data: 618
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:919) total sent bytes: 618
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[143] r[151] event_count[2]<<
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(net.c:781) Over Close count
+
+[DEBUG][2025-03-23 19:19:33](p:165080 t:14073735)(client_side.c:228) Connection Reuse
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[151]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[151] r[-1] event_count[3]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 222 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 307] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[313]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[315]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[317]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[319]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[321]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[313] r[-1] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 220 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT pm.pstatic.net:443 HTTP/1.1
+Host: pm.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 327] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: pm.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for pm.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:pm.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[315] r[-1] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 220 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT pm.pstatic.net:443 HTTP/1.1
+Host: pm.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 336] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: pm.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for pm.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:pm.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[317] r[-1] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 220 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT pm.pstatic.net:443 HTTP/1.1
+Host: pm.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 345] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: pm.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for pm.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:pm.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[319] r[-1] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 222 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 354] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[321] r[-1] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 220 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT pm.pstatic.net:443 HTTP/1.1
+Host: pm.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 363] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: pm.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for pm.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:pm.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[313] r[327] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[315] r[336] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[317] r[345] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[151] r[307] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[317] r[345] event_count[3]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[317] r[345] event_count[8]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 604 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /resources/js/search.a43eac39.js?o=www HTTP/1.1
+Host: pm.pstatic.net
+Connection: keep-alive
+Origin: https://www.naver.com
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+Accept: */*
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: script
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[315] r[336] event_count[8]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[321] r[363] event_count[8]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[313] r[327] event_count[8]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[151] r[307] event_count[8]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[319] r[354] event_count[8]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[315] r[336] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 605 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /resources/js/preload.f3f797b3.js?o=www HTTP/1.1
+Host: pm.pstatic.net
+Connection: keep-alive
+Origin: https://www.naver.com
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+Accept: */*
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: script
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[313] r[327] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 606 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /resources/js/polyfill.694df035.js?o=www HTTP/1.1
+Host: pm.pstatic.net
+Connection: keep-alive
+Origin: https://www.naver.com
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+Accept: */*
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: script
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[151] r[307] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 678 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /tveta/libs/assets/js/pc/main/min/pc.veta.core.min.js HTTP/1.1
+Host: ssl.pstatic.net
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+Sec-Purpose: prefetch;prerender
+sec-ch-ua-mobile: ?0
+Accept: */*
+Purpose: prefetch
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: script
+Sec-Fetch-Storage-Access: active
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 658 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /tveta/libs/glad/prod/gfp-core.js HTTP/1.1
+Host: ssl.pstatic.net
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+Sec-Purpose: prefetch;prerender
+sec-ch-ua-mobile: ?0
+Accept: */*
+Purpose: prefetch
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: script
+Sec-Fetch-Storage-Access: active
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[317] r[345] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 604
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 604
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 604
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 658
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 658
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 658
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[315] r[336] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 605
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 605
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 605
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[313] r[327] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 606
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 606
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 606
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[151] r[307] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 678
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 678
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 678
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[6]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16384
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 31
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16415
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16415 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16384
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16415
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[319] r[354] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:781) Over Close count
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:228) Connection Reuse
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 602 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /resources/js/main.6e72fb16.js?o=www HTTP/1.1
+Host: pm.pstatic.net
+Connection: keep-alive
+Origin: https://www.naver.com
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+Accept: */*
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: script
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 602
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 602
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 602
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2853
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 2853
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 2853 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 2853
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 5339
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 5339
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 13531
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2853
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16384
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16384 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 5339
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 13531
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 5339
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 5339
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 13531
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2789
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16320
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16320 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 5339
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 13531
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 5403
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 5403
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 13595
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2789
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16384
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16384 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 5403
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 13595
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 5403
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 5403
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 13595
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2725
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16320
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16320 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 5403
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 13595
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 5467
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 5467
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 13659
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2725
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16384
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16384 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 5467
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 13659
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 5467
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 5467
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 13659
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 2661
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16320
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16320 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 5467
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 13659
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[321] r[363] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:781) Over Close count
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:228) Connection Reuse
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[363]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:381) new accept client fd[-1]
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[363] r[-1] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:383) Data received from client: 222 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+Proxy-Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:150) Remote[fd: 744] SSL Handshake Success
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1032) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1033) Port: 443
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:1034) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:977) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:501) >> STATE_CLIENT_PROXY_SSL_CONN c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:964) Client SSL Handshake Success
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:450) >> STATE_CLIENT_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:484) Data received from client: 612 bytes
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:485) GET /tveta/libs/glad/prod/2.37.0/gfp-sdk.js HTTP/1.1
+Host: ssl.pstatic.net
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+sec-ch-ua: "Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile: ?0
+Accept: */*
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: script
+Sec-Fetch-Storage-Access: active
+Referer: https://www.naver.com/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:496) >> STATE_REMOTE_WRITE c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:905) Request Buffer Length: 612
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:918) send data: 612
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:919) total sent bytes: 612
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:922) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 1469
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 1469 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 1469
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 6723
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 14915
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16384
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16384 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 6723
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 14915
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: 1405
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:750) total read bytes: 16320
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:768) Data received from remote: 16320 bytes
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:455) >> STATE_CLIENT_WRITE c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:785) No data to read
+
+[INFO][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:462) >> STATE_REMOTE_READ c[363] r[744] event_count[7]<<
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:762) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(net.c:781) Over Close count
+
+[DEBUG][2025-03-23 19:19:34](p:165080 t:14073735)(client_side.c:228) Connection Reuse
+
+[DEBUG][2025-03-23 20:44:12](p:165540 t:14073734)(net.c:1226) Thread[0] create 
+[DEBUG][2025-03-23 20:44:12](p:165540 t:14073721)(net.c:1226) Thread[1] create 
+[DEBUG][2025-03-23 20:44:12](p:165540 t:14073733)(net.c:1226) Thread[2] create 
+[INFO][2025-03-23 20:44:17](p:165540 t:14073735)(client_side.c:383) new accept client fd[8]
+[INFO][2025-03-23 20:44:17](p:165540 t:14073735)(client_side.c:383) new accept client fd[-1]
+[INFO][2025-03-23 20:44:17](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[8] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 20:44:17](p:165540 t:14073735)(net.c:383) Data received from client: 122 bytes
+
+[DEBUG][2025-03-23 20:44:17](p:165540 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+User-Agent: curl/7.81.0
+Proxy-Connection: Keep-Alive
+
+
+
+[INFO][2025-03-23 20:44:17](p:165540 t:14073735)(net.c:150) Remote[fd: 14] SSL Handshake Success
+
+[DEBUG][2025-03-23 20:44:17](p:165540 t:14073735)(net.c:1031) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 20:44:17](p:165540 t:14073735)(net.c:1032) Port: 443
+
+[DEBUG][2025-03-23 20:44:17](p:165540 t:14073735)(net.c:1033) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:976) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:963) Client SSL Handshake Success
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:484) Data received from client: 127 bytes
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+User-Agent: curl/7.81.0
+Accept: */*
+
+
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:500) >> STATE_REMOTE_WRITE c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:904) Request Buffer Length: 127
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:917) send data: 127
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:918) total sent bytes: 127
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:921) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 1469
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:769) Data received from remote: 1469 bytes
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 1469
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 14915
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 2440
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 18824
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:769) Data received from remote: 20293 bytes
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 18824
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 4283
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 4283
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 12475
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 3909
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:769) Data received from remote: 36677 bytes
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 4283
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 12475
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 4283
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 4283
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 12475
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: 2976
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:751) total read bytes: 15451
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:769) Data received from remote: 52128 bytes
+
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 4283
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 12475
+[DEBUG][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:560) total sent bytes: 15451
+[INFO][2025-03-23 20:44:18](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:383) new accept client fd[127]
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:383) new accept client fd[-1]
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[127] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:383) Data received from client: 122 bytes
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+User-Agent: curl/7.81.0
+Proxy-Connection: Keep-Alive
+
+
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:150) Remote[fd: 133] SSL Handshake Success
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:1031) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:1032) Port: 443
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:1033) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:976) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:963) Client SSL Handshake Success
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:484) Data received from client: 127 bytes
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+User-Agent: curl/7.81.0
+Accept: */*
+
+
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:500) >> STATE_REMOTE_WRITE c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:904) Request Buffer Length: 127
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:917) send data: 127
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:918) total sent bytes: 127
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:921) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 1469
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:769) Data received from remote: 1469 bytes
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 1469
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 14915
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:769) Data received from remote: 17853 bytes
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 14915
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 1405
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 16320
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:769) Data received from remote: 34173 bytes
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 6787
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 6787
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 1053
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 7840
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 7139
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 14979
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: 2976
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:751) total read bytes: 17955
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:769) Data received from remote: 52128 bytes
+
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 6787
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 14979
+[DEBUG][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:560) total sent bytes: 17955
+[INFO][2025-03-23 20:44:20](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:383) new accept client fd[254]
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:383) new accept client fd[-1]
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[254] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:383) Data received from client: 122 bytes
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+User-Agent: curl/7.81.0
+Proxy-Connection: Keep-Alive
+
+
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:150) Remote[fd: 260] SSL Handshake Success
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:1031) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:1032) Port: 443
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:1033) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:976) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:963) Client SSL Handshake Success
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:484) Data received from client: 127 bytes
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+User-Agent: curl/7.81.0
+Accept: */*
+
+
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:500) >> STATE_REMOTE_WRITE c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:904) Request Buffer Length: 127
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:917) send data: 127
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:918) total sent bytes: 127
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:921) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 8192
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 517
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 8709
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:769) Data received from remote: 8709 bytes
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 8192
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 8709
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 7675
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 7675
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 15867
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 517
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:769) Data received from remote: 25093 bytes
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 7675
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 15867
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 7675
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 7675
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 15867
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 453
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 16320
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:769) Data received from remote: 41413 bytes
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 7675
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 15867
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 7739
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 7739
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: 2976
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:751) total read bytes: 10715
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:769) Data received from remote: 52128 bytes
+
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 7739
+[DEBUG][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:560) total sent bytes: 10715
+[INFO][2025-03-23 20:44:21](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:383) new accept client fd[403]
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:383) new accept client fd[-1]
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[403] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:383) Data received from client: 122 bytes
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+User-Agent: curl/7.81.0
+Proxy-Connection: Keep-Alive
+
+
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:150) Remote[fd: 409] SSL Handshake Success
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:1031) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:1032) Port: 443
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:1033) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:976) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:963) Client SSL Handshake Success
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:484) Data received from client: 127 bytes
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+User-Agent: curl/7.81.0
+Accept: */*
+
+
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:500) >> STATE_REMOTE_WRITE c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:904) Request Buffer Length: 127
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:917) send data: 127
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:918) total sent bytes: 127
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:921) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 1469
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:769) Data received from remote: 1469 bytes
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 1469
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 14915
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:769) Data received from remote: 17853 bytes
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 5853
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 12576
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:769) Data received from remote: 30429 bytes
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 12576
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 2339
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 2339
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 10531
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 5853
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 2339
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 18723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: 2976
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:751) total read bytes: 21699
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:769) Data received from remote: 52128 bytes
+
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 2339
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 10531
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 18723
+[DEBUG][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:560) total sent bytes: 21699
+[INFO][2025-03-23 20:44:22](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:383) new accept client fd[534]
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:383) new accept client fd[-1]
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[534] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:383) Data received from client: 122 bytes
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+User-Agent: curl/7.81.0
+Proxy-Connection: Keep-Alive
+
+
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:150) Remote[fd: 540] SSL Handshake Success
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:1031) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:1032) Port: 443
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:1033) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:976) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:963) Client SSL Handshake Success
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:484) Data received from client: 127 bytes
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+User-Agent: curl/7.81.0
+Accept: */*
+
+
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:500) >> STATE_REMOTE_WRITE c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:904) Request Buffer Length: 127
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:917) send data: 127
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:918) total sent bytes: 127
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:921) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 8192
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 1965
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 10157
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:769) Data received from remote: 10157 bytes
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 8192
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 10157
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 6227
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 6227
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 14419
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 1965
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:769) Data received from remote: 26541 bytes
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 6227
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 14419
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 6227
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 6227
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 14419
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 1901
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 16320
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:769) Data received from remote: 42861 bytes
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 6227
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 14419
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 6291
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 6291
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: 2976
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:751) total read bytes: 9267
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:769) Data received from remote: 52128 bytes
+
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 6291
+[DEBUG][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:560) total sent bytes: 9267
+[INFO][2025-03-23 20:44:23](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:24](p:165540 t:14073735)(client_side.c:383) new accept client fd[659]
+[INFO][2025-03-23 20:44:24](p:165540 t:14073735)(client_side.c:383) new accept client fd[-1]
+[INFO][2025-03-23 20:44:24](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[659] r[-1] event_count[1]<<
+[DEBUG][2025-03-23 20:44:24](p:165540 t:14073735)(net.c:383) Data received from client: 122 bytes
+
+[DEBUG][2025-03-23 20:44:24](p:165540 t:14073735)(net.c:384) CONNECT ssl.pstatic.net:443 HTTP/1.1
+Host: ssl.pstatic.net:443
+User-Agent: curl/7.81.0
+Proxy-Connection: Keep-Alive
+
+
+
+[INFO][2025-03-23 20:44:24](p:165540 t:14073735)(net.c:150) Remote[fd: 665] SSL Handshake Success
+
+[DEBUG][2025-03-23 20:44:24](p:165540 t:14073735)(net.c:1031) Host: ssl.pstatic.net
+
+[DEBUG][2025-03-23 20:44:24](p:165540 t:14073735)(net.c:1032) Port: 443
+
+[DEBUG][2025-03-23 20:44:24](p:165540 t:14073735)(net.c:1033) CONNECT request for ssl.pstatic.net:443
+
+[INFO][2025-03-23 20:44:24](p:165540 t:14073735)(ssl_conn.c:217) domain: DNS:ssl.pstatic.net
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:976) SSL_ERROR_WANT_READ
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:505) >> STATE_CLIENT_PROXY_SSL_CONN c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:963) Client SSL Handshake Success
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:454) >> STATE_CLIENT_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:484) Data received from client: 127 bytes
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:485) GET /sstatic/search/pc/css/sp_autocomplete_241121.css HTTP/1.1
+Host: ssl.pstatic.net
+User-Agent: curl/7.81.0
+Accept: */*
+
+
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:500) >> STATE_REMOTE_WRITE c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:904) Request Buffer Length: 127
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:917) send data: 127
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:918) total sent bytes: 127
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:921) Success STATE_REMOTE_WRITE
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 1469
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:769) Data received from remote: 1469 bytes
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 1469
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 14915
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 1469
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:769) Data received from remote: 17853 bytes
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 6723
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 6723
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 14915
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 1405
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 16320
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:769) Data received from remote: 34173 bytes
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 6723
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 14915
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 16320
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:784) No data to read
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 6787
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 6787
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(sc_mem_pool.c:25) 추가 메모리 풀 할당 (크기: 16384 바이트)
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 8192
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 14979
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 1405
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 16384
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:769) Data received from remote: 50557 bytes
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 6787
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 14979
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 16384
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:466) >> STATE_REMOTE_READ c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: 1571
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:751) total read bytes: 1571
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:743) SSL_read result: -1
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:763) SSL_read result: SSL_ERROR_WANT_READ
+
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:769) Data received from remote: 52128 bytes
+
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(client_side.c:459) >> STATE_CLIENT_WRITE c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:560) total sent bytes: 1571
+[INFO][2025-03-23 20:44:25](p:165540 t:14073735)(net.c:567) Success STATE_CLIENT_WRITE
+[INFO][2025-03-23 20:48:18](p:165540 t:14073735)(client_side.c:410) >> CLOSED CONNECTION c[8] r[14] event_count[1]<<
+[DEBUG][2025-03-23 20:48:18](p:165540 t:14073735)(client_side.c:225) Connection closed
+
+[INFO][2025-03-23 20:48:20](p:165540 t:14073735)(client_side.c:410) >> CLOSED CONNECTION c[127] r[133] event_count[1]<<
+[DEBUG][2025-03-23 20:48:20](p:165540 t:14073735)(client_side.c:225) Connection closed
+
+[INFO][2025-03-23 20:48:21](p:165540 t:14073735)(client_side.c:410) >> CLOSED CONNECTION c[254] r[260] event_count[1]<<
+[DEBUG][2025-03-23 20:48:21](p:165540 t:14073735)(client_side.c:225) Connection closed
+
+[INFO][2025-03-23 20:48:22](p:165540 t:14073735)(client_side.c:410) >> CLOSED CONNECTION c[403] r[409] event_count[1]<<
+[DEBUG][2025-03-23 20:48:22](p:165540 t:14073735)(client_side.c:225) Connection closed
+
+[INFO][2025-03-23 20:48:23](p:165540 t:14073735)(client_side.c:410) >> CLOSED CONNECTION c[534] r[540] event_count[1]<<
+[DEBUG][2025-03-23 20:48:23](p:165540 t:14073735)(client_side.c:225) Connection closed
+
+[INFO][2025-03-23 20:48:25](p:165540 t:14073735)(client_side.c:410) >> CLOSED CONNECTION c[659] r[665] event_count[1]<<
+[DEBUG][2025-03-23 20:48:25](p:165540 t:14073735)(client_side.c:225) Connection closed
+

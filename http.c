@@ -214,7 +214,7 @@ HTTPParseResult parse_http_request(HTTPRequestParser *parser) {
                     // 헤더 이름 파싱
                     field->name.start = pos;
                     while (pos < last && *pos != ':') pos++;
-                    if (pos == last) return HTTP_PARSE_CONTINUE;
+                    if (pos == last) break;
                     field->name.length = pos - field->name.start;
                     pos++;
 
@@ -224,10 +224,9 @@ HTTPParseResult parse_http_request(HTTPRequestParser *parser) {
                     // 헤더 값 파싱
                     field->value.start = pos;
                     while (pos < last && *pos != '\r') pos++;
-                    if (pos == last) return HTTP_PARSE_CONTINUE;
+                    if (pos == last) break;
                     field->value.length = pos - field->value.start;
 
-                    // pos += 2;
                 }
                 break;
 
@@ -304,14 +303,21 @@ char *HTTPString_to_value(HTTPString str) {
 }
 
 void free_request(HTTPRequest *request) {
+    if (request == NULL) return;
 
-    HTTPHeaderField *header = request->header;
-    while (header) {
-        HTTPHeaderField *next = header->next;
-        free(header);
-        header = next;
+    if (request->header != NULL) {
+        HTTPHeaderField *header = request->header;
+
+        while (header) {
+            HTTPHeaderField *next = header->next;
+            free(header);
+            header = next;
+        }
+    }
+    
+    if (request->s_host != NULL) {
+        free(request->s_host);
     }
 
-    if(request->s_host) free(request->s_host);
     free(request);
 }

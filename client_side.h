@@ -29,15 +29,21 @@ typedef enum task_state_t {
     STATE_PROXY_REMOTE_SSL_CONN
 } task_state_t;
 
+typedef enum {
+    CLEANUP_REMOTE_ONLY,
+    CLEANUP_FULL_CLOSE
+} cleanup_mode_t;
+
 typedef struct task_t {
     int client_fd;
-    bool client_side_https; //client<->proxy https 통신
-    bool remote_side_https; //proxy<->remote https 통신
+    bool client_side_https; //client<->proxy https 통신  
     SSL_CTX* client_ctx;
     SSL* client_ssl;
     SSL_CTX* before_client_ctx;
     SSL* before_client_ssl;
+
     int remote_fd;
+    bool remote_side_https; //proxy<->remote https 통신
     SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     BIO* sbio;
@@ -48,15 +54,19 @@ typedef struct task_t {
     sc_buf_t* c_buffer_last;
 
     sc_buf_t* r_buffer; // 응답 버퍼
+    sc_buf_t* r_buffer_last;
 
     int c_buffer_len;
     int r_buffer_len;
+    int r_total_len;
     //HTTPRequest* req;
     HTTPRequestParser* parser;
     HTTPParseResult parse_state;
 
+    int close_cnt;
     task_state_t state;
     bool auth;
+    bool closed;
     time_t current_time;
 } task_t;
 
@@ -73,12 +83,20 @@ typedef struct task_arg_t{
     void (*func)(void *);
 }task_arg_t;
 
+typedef struct closed_task_node {
+    task_t* task;
+    struct closed_task_node* next;
+} closed_task_node_t;
+
 typedef struct thread_cond_t{
     int busy;
     pthread_cond_t *cond;
 }thread_cond_t;
 
 task_t* create_task();
+void task_cleanup(task_t* task, const int p_epoll_fd, cleanup_mode_t mode);
 void connection_close(task_t* task, const int p_epoll_fd);
+void connection_reuse(task_t* task, const int p_epoll_fd, struct epoll_event *ev);
+void cleanup_closed_tasks();
 
 #endif //CLIENT_SIDE
