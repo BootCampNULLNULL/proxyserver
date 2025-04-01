@@ -125,6 +125,7 @@ int main(void) {
     }
     pthread_mutex_unlock(&mutex_lock); 
     while (1) {
+        struct epoll_event ev;
         int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         if (event_count == -1) {
             if (errno == EINTR) continue; // 신호로 인한 중단은 무시
@@ -229,8 +230,8 @@ int main(void) {
                     result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
                     if(result<=0)
                         continue;
-                    LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
-#if 1
+                    // LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
+#ifdef MULTI_THREAD
 
                     for(int i=0;i<MAX_THREAD_POOL;i++){
                         if(!thread_cond[i].busy){
