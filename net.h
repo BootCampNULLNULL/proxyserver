@@ -9,7 +9,7 @@ int initial_read(task_t* task);
 int recv_data(task_t* task, int epoll_fd);
 
 int connect_remote_http(const char* hostname, int port);
-SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx);
+SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx, const char* host);
 void log_exit(const char *fmt, ...);
 void* xmalloc(size_t sz);
 void set_nonblocking(int fd);

@@ -155,7 +155,12 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 1);
 
     // 인증서 유효기간 설정
-    X509_gmtime_adj(X509_get_notBefore(cert), 0);
+    ASN1_TIME *start = ASN1_TIME_new();
+    ASN1_TIME_set_string(start, "20250324120000Z"); // YYYYMMDDhhmmssZ (Z = UTC)
+
+    X509_set_notBefore(cert, start);
+    ASN1_TIME_free(start);  // 설정 후 해제
+    // X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 365 * 24 * 60 * 60);
 
     // 인증서 주체이름 설정
@@ -203,16 +208,20 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
             return NULL;
         }
 
-        char san_field[100]={0,};
+        char san_field[1000]={0,};
         struct sockaddr_in sa;
         // IPv4 체크
         if (inet_pton(AF_INET, common_name, &(sa.sin_addr)) == 1) {
             sprintf(san_field, "IP:%s",common_name);
         }
         else{
-            
-            // sprintf(san_field, "DNS:*%s",strchr(common_name,'.'));
             sprintf(san_field, "DNS:%s",common_name);
+            char* posi = common_name;
+            while((posi = strchr(posi,'.'))){
+                posi++;
+                sprintf(san_field+strlen(san_field), ",DNS:*.%s",posi);                
+            }
+            
         }
         LOG(INFO, "domain: %s", san_field);
 
@@ -311,14 +320,14 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
         ssl_key = generate_rsa_key();
     // EVP_PKEY *key = generate_rsa_key();
     if (!ssl_key) {
-        perror("Failed to generate RSA key");
+        LOG(ERROR,"Failed to generate RSA key");
         return -1;
     }
 
     X509 *dynamic_cert = generate_cert(domain, ssl_key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(ssl_key);
-        perror("Failed to generate dynamic certificate");
+        LOG(ERROR,"Failed to generate dynamic certificate");
         return -1;
     }
     
@@ -383,7 +392,7 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
     X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(key);
-        perror("Failed to generate dynamic certificate");
+        LOG(ERROR,"Failed to generate dynamic certificate");
         close(client_sock);
         return NULL;
     }
@@ -502,7 +511,7 @@ int make_ssl_cert(const char* domain, EVP_PKEY *ca_key, X509 *ca_cert) {
     X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(key);
-        perror("Failed to generate dynamic certificate");
+        LOG(ERROR,"Failed to generate dynamic certificate");
         return -2;
     }
     

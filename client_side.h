@@ -44,6 +44,7 @@ typedef struct task_t {
     int buffer_len;
     HTTPRequest* req;
     task_state_t state;
+    task_state_t before_state;
     bool auth;
     time_t current_time;
 } task_t;

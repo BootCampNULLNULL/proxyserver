@@ -37,7 +37,7 @@ int serverport;
 int timeout = 0;
 EVP_PKEY *ssl_key=NULL;
 //thread 수 
-#define MAX_THREAD_POOL 3
+#define MAX_THREAD_POOL 10
 //각 thread를 위한 동기화 조건 변수
 thread_cond_t *thread_cond;
 //각 thread critical section 지정
@@ -163,6 +163,7 @@ int main(void) {
                     task->remote_side_https = false;
                     task->buffer_len = 0;
                     task->state = STATE_CLIENT_READ;
+                    task->before_state = STATE_INITIAL_READ;
                     task->auth = false;
                     ev.events = EPOLLIN|EPOLLRDHUP;
                     ev.data.ptr = task;
