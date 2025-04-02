@@ -126,6 +126,7 @@ SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx, const char* host)
     if (!remote_ctx) {
         perror("Failed to create SSL context for remote server");
         close(remote_fd);
+        exit(1);
         return NULL;
     }
     SSL *remote_ssl = SSL_new(remote_ctx);
@@ -431,15 +432,15 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
             continue;
             // break;
         } else if (ret == 0) {
-            LOG(ERROR,"Client disconnected\n");
-            pthread_mutex_lock(&mutex_lock); 
-            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-            pthread_mutex_unlock(&mutex_lock); 
-            // free_request(task->req); !
-            SSL_free(task->client_ssl);
-            SSL_CTX_free(task->client_ctx);
-            close(task->client_fd);
-            free(task);
+            // LOG(ERROR,"Client disconnected\n");
+            // pthread_mutex_lock(&mutex_lock); 
+            // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+            // pthread_mutex_unlock(&mutex_lock); 
+            // // free_request(task->req); !
+            // SSL_free(task->client_ssl);
+            // SSL_CTX_free(task->client_ctx);
+            // close(task->client_fd);
+            // free(task);
             break;
         } else {
             int err = SSL_get_error(task->client_ssl, ret);
@@ -455,7 +456,21 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
 
     LOG(DEBUG,"Data received from client: %d bytes\n", task->buffer_len);
     LOG(DEBUG,"%s\n", task->buffer);
+    if(task->before_state == STATE_CLIENT_PROXY_SSL_CONN){
+        pthread_mutex_lock(&mutex_lock); 
+        task->before_state = STATE_CLIENT_READ;
+        ev->events = EPOLLIN|EPOLLRDHUP;
+        ev->data.ptr = task;
+        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
 
+        task_t* task_remote = (task_t*)calloc(1,sizeof(task_t));
+        memcpy(task_remote, task, sizeof(task_t));
+        task_remote->state = STATE_REMOTE_READ;
+        ev->events = EPOLLIN|EPOLLRDHUP;
+        ev->data.ptr = task_remote;
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task_remote->remote_fd, ev);
+        pthread_mutex_unlock(&mutex_lock); 
+    }
 
     
     return STAT_OK;
@@ -633,10 +648,10 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
         } else if (ret == 0) {
             LOG(DEBUG,"remote disconnected\n");
             if (task->buffer_len == 0) {
-                            pthread_mutex_lock(&mutex_lock);
-                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
-                            pthread_mutex_unlock(&mutex_lock);
+                            // pthread_mutex_lock(&mutex_lock);
+                // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                            // pthread_mutex_unlock(&mutex_lock);
                 // free_request(task->req); !
                 // SSL_free(task->client_ssl);
                 // SSL_CTX_free(task->client_ctx);
@@ -688,9 +703,9 @@ int remote_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
         epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
     }
 #endif
-    pthread_mutex_lock(&mutex_lock);
-    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-    pthread_mutex_unlock(&mutex_lock);
+    // pthread_mutex_lock(&mutex_lock);
+    // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+    // pthread_mutex_unlock(&mutex_lock);
     // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
     // close(task->client_fd);
     // close(task->remote_fd);
@@ -815,6 +830,7 @@ int client_proxy_ssl_conn(task_t* task, int epoll_fd, struct epoll_event *ev)
             LOG(DEBUG,"Client SSL Handshake Success\n");
             task->state = STATE_CLIENT_READ;
             task->client_side_https = true;
+            task->before_state = STATE_CLIENT_PROXY_SSL_CONN;
             ev->events = EPOLLIN|EPOLLRDHUP;
             ev->data.ptr = task;
             // set_nonblocking(task->client_fd);
@@ -866,6 +882,7 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
         // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
         pthread_mutex_unlock(&mutex_lock); 
+        exit(1);
         return STAT_FAIL;
     }
     task->client_side_https = true;
@@ -900,12 +917,13 @@ int client_connect_req(task_t* task, int epoll_fd, struct epoll_event *ev)
 #else
     epoll_ctl(epoll_fd, EPOLL_CTL_MOD, task->client_fd, ev);
 #endif
-    task_t* task_remote = (task_t*)calloc(1,sizeof(task_t));
-    memcpy(task_remote, task, sizeof(task_t));
-    task_remote->state = STATE_REMOTE_READ;
-    ev->events = EPOLLIN|EPOLLRDHUP;
-    ev->data.ptr = task_remote;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task_remote->remote_fd, ev);
+    // REMOTE_READ가 먼저 감시 되어 순서 꼬이는 경우 있음
+    // task_t* task_remote = (task_t*)calloc(1,sizeof(task_t));
+    // memcpy(task_remote, task, sizeof(task_t));
+    // task_remote->state = STATE_REMOTE_READ;
+    // ev->events = EPOLLIN|EPOLLRDHUP;
+    // ev->data.ptr = task_remote;
+    // epoll_ctl(epoll_fd, EPOLL_CTL_ADD, task_remote->remote_fd, ev);
     pthread_mutex_unlock(&mutex_lock); 
     return STAT_OK;
 }
@@ -1086,10 +1104,11 @@ void *thread_func(void *data)
     {
         pthread_mutex_lock(&cond_lock);
         pthread_cond_wait(thread_cond[th_idx].cond, &cond_lock);
-        LOG(DEBUG, "Thread[%d] work ", th_idx);
+        LOG(DEBUG, "Thread[%d] work cfd[%d] rfd[%d] req->host[%s]  client port[%d]", th_idx, task_arg[th_idx].task->client_fd,  task_arg[th_idx].task->remote_fd, task_arg[th_idx].task->req->host, task_arg[th_idx].task->client_port);
         task_arg[th_idx].func(&(task_arg[th_idx]));
         thread_cond[th_idx].busy = 0;
-        LOG(DEBUG, "Thread[%d] Done ", th_idx);
+        LOG(DEBUG, "Thread[%d] Done cfd[%d] rfd[%d] req->host[%s]  client port[%d]", th_idx, task_arg[th_idx].task->client_fd,  task_arg[th_idx].task->remote_fd, task_arg[th_idx].task->req->host, task_arg[th_idx].task->client_port);
+        // LOG(DEBUG, "Thread[%d] Done ", th_idx);
         pthread_mutex_unlock(&cond_lock);
     }
 }

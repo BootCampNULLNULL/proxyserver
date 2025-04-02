@@ -47,6 +47,8 @@ typedef struct task_t {
     task_state_t before_state;
     bool auth;
     time_t current_time;
+    int client_port;
+
 } task_t;
 
 // void set_nonblocking(int fd);

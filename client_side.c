@@ -37,7 +37,7 @@ int serverport;
 int timeout = 0;
 EVP_PKEY *ssl_key=NULL;
 //thread 수 
-#define MAX_THREAD_POOL 10
+#define MAX_THREAD_POOL 20
 //각 thread를 위한 동기화 조건 변수
 thread_cond_t *thread_cond;
 //각 thread critical section 지정
@@ -132,7 +132,6 @@ int main(void) {
             perror("Epoll wait failed");
             break;
         }
-
         for (int i = 0; i < event_count; i++) {
             if (events[i].data.fd == server_fd) {
                 // 새 클라이언트 연결 처리
@@ -153,7 +152,8 @@ int main(void) {
                     set_nonblocking(client_fd);
 
                     task_t* task = (task_t*)malloc(sizeof(task_t));
-                    
+                    //debugging 용도
+                    task->client_port = ntohs(cliaddr.sin_port);
                     task->client_fd = client_fd;
                     task->client_side_https = false;
                     task->client_ssl = NULL;
@@ -209,12 +209,12 @@ int main(void) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK)
                             continue;
                         else{
-                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                            close(task->client_fd);
+                            // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                            // close(task->client_fd);
                             // free(task);
                         }
                     }
-                    LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]<<",task->client_fd,task->remote_fd, event_count);
+                    LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]  client port[%d]<<",task->client_fd,task->remote_fd, event_count,  task->client_port);
                     int ret = client_read(task, epoll_fd, &ev);    
                 } 
                 else if (task->state == STATE_CLIENT_WRITE) 
@@ -230,7 +230,7 @@ int main(void) {
                     result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
                     if(result<=0)
                         continue;
-                    // LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
+                    LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
 #ifdef MULTI_THREAD
 
                     for(int i=0;i<MAX_THREAD_POOL;i++){
@@ -242,7 +242,7 @@ int main(void) {
                             task_arg[i].task = (task_t*)calloc(1,sizeof(task_t));
                             memcpy(task_arg[i].task, task, sizeof(task_t));
                             thread_cond[i].busy=1;
-                            LOG(INFO, "Thread [%d] IN", i);
+                            LOG(INFO, "Thread[%d] IN cfd[%d], rfd[%d], request host[%s],  client port[%d]", i, task->client_fd, task->remote_fd, task->req->host,  task->client_port);
                             pthread_cond_signal(thread_cond[i].cond);
                             break;
                         }
@@ -267,7 +267,7 @@ int main(void) {
                 } 
                 else if (task->state == STATE_CLIENT_PROXY_SSL_CONN)
                 {
-                    LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
+                    LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
                     int ret = client_proxy_ssl_conn(task, epoll_fd, &ev);
                 }
             }
