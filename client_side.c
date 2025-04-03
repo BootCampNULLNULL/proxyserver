@@ -125,7 +125,6 @@ int main(void) {
     }
     pthread_mutex_unlock(&mutex_lock); 
     while (1) {
-        struct epoll_event ev;
         int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         if (event_count == -1) {
             if (errno == EINTR) continue; // 신호로 인한 중단은 무시
@@ -133,6 +132,7 @@ int main(void) {
             break;
         }
         for (int i = 0; i < event_count; i++) {
+            struct epoll_event ev;
             if (events[i].data.fd == server_fd) {
                 // 새 클라이언트 연결 처리
                 while(1) {
@@ -232,7 +232,7 @@ int main(void) {
                         continue;
                     LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
 #ifdef MULTI_THREAD
-
+                    pthread_mutex_lock(&cond_lock); //Lost Wakeup 이슈로 락
                     for(int i=0;i<MAX_THREAD_POOL;i++){
                         if(!thread_cond[i].busy){
                             memset(&task_arg[i], 0, sizeof(task_arg_t));
@@ -242,6 +242,9 @@ int main(void) {
                             task_arg[i].task = (task_t*)calloc(1,sizeof(task_t));
                             memcpy(task_arg[i].task, task, sizeof(task_t));
                             thread_cond[i].busy=1;
+                            pthread_mutex_lock(&mutex_lock); 
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                            pthread_mutex_unlock(&mutex_lock); 
                             LOG(INFO, "Thread[%d] IN cfd[%d], rfd[%d], request host[%s],  client port[%d]", i, task->client_fd, task->remote_fd, task->req->host,  task->client_port);
                             pthread_cond_signal(thread_cond[i].cond);
                             break;
@@ -253,9 +256,8 @@ int main(void) {
                             }
                         }
                     }
-                    pthread_mutex_lock(&mutex_lock); 
-                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
-                    pthread_mutex_unlock(&mutex_lock); 
+                    pthread_mutex_unlock(&cond_lock);
+                    
 #else
                     int ret = remote_read(task, epoll_fd, &ev);
 #endif
