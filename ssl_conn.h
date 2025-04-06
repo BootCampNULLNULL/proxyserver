@@ -27,4 +27,5 @@ int make_ssl_cert(const char* domain, EVP_PKEY *ca_key, X509 *ca_cert);
 int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx, SSL** ssl);
 int save_key(EVP_PKEY *key, const char *key_path);
 int save_cert(X509 *cert, const char *cert_path);
+void keylog_callback(const SSL *ssl, const char *line);
 #endif //SSL_CONN

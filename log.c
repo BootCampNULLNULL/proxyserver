@@ -61,9 +61,11 @@ void set_log_level(LogLevel level) {
 
 // 로그 파일 초기화
 void init_log_file(const char *filename) {
-    log_fp = fopen(filename, "a");
-    if (!log_fp) {
-        perror("Failed to open log file");
+    if(!log_fp){
+        log_fp = fopen(filename, "a");
+        if (!log_fp) {
+            perror("Failed to open log file");
+        }
     }
 }
 

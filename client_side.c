@@ -54,11 +54,15 @@ task_arg_t *task_arg;
 //
 pthread_mutex_t mutex_lock= PTHREAD_MUTEX_INITIALIZER; 
 
+pthread_mutex_t log_lock= PTHREAD_MUTEX_INITIALIZER; 
+
 int main(void) {
 
 
     if(init_proxy()!=STAT_OK){
+        pthread_mutex_lock(&log_lock); 
         LOG(ERROR, "proxy init fail");
+        pthread_mutex_unlock(&log_lock); 
     }
 
     if (!ca_key || !ca_cert) {
@@ -99,13 +103,22 @@ int main(void) {
     task_arg = (task_arg_t *)malloc(sizeof(task_arg_t)*MAX_THREAD_POOL);
     for(int i=0;i<MAX_THREAD_POOL;i++){
         thread_cond[i].cond = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
+        thread_cond[i].thread_cond_lock = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
+        if (pthread_mutex_init(thread_cond[i].thread_cond_lock, NULL) != 0) {
+            perror("pthread_mutex_init");
+            free(thread_cond[i].thread_cond_lock);
+            return 1;
+        }
+
         pthread_cond_init(thread_cond[i].cond, NULL);
-        thread_cond[i].busy = 0;
+        thread_cond[i].ready = 0;
     }
     for(int i=0;i<MAX_THREAD_POOL;i++){
         pthread_mutex_lock(&async_mutex); 
         if(pthread_create(&thread, NULL, thread_func, (void *)&i) < 0){
+            pthread_mutex_lock(&log_lock); 
             LOG(ERROR, "thread create error");
+            pthread_mutex_unlock(&log_lock); 
         }
         pthread_cond_wait(&async_cond, &async_mutex);
         pthread_mutex_unlock(&async_mutex);
@@ -139,7 +152,9 @@ int main(void) {
                     struct sockaddr_in cliaddr;
                     socklen_t len = sizeof(cliaddr);
                     int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
+                    pthread_mutex_lock(&log_lock); 
                     LOG(INFO, "new accept client fd[%d]",client_fd);
+                    pthread_mutex_unlock(&log_lock); 
                     if(client_fd < 0) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK) {
                             // 모든 연결이 처리됨
@@ -197,11 +212,11 @@ int main(void) {
                 //     }
                 // }
                 if (task->state == STATE_CLIENT_READ) {
-                    if (events[i].events & EPOLLRDHUP) {
-                        printf("Client disconnected (EPOLLRDHUP)\n");
-                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                        close(task->client_fd);
-                    }
+                    // if (events[i].events & EPOLLRDHUP) {
+                    //     printf("Client disconnected (EPOLLRDHUP)\n");
+                    //     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                    //     close(task->client_fd);
+                    // }
                     int result = 0;
                     char strTmp[MAX_BUFFER_SIZE] = {0,};
                     result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
@@ -214,12 +229,16 @@ int main(void) {
                             // free(task);
                         }
                     }
+                    pthread_mutex_lock(&log_lock); 
                     LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]  client port[%d]<<",task->client_fd,task->remote_fd, event_count,  task->client_port);
+                    pthread_mutex_unlock(&log_lock); 
                     int ret = client_read(task, epoll_fd, &ev);    
                 } 
                 else if (task->state == STATE_CLIENT_WRITE) 
                 {
+                    pthread_mutex_lock(&log_lock); 
                     LOG(INFO,  ">> STATE_CLIENT_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
+                    pthread_mutex_unlock(&log_lock); 
                     int ret = client_write(task, epoll_fd, &ev);
                 }
                 else if (task->state == STATE_REMOTE_READ) {
@@ -230,33 +249,41 @@ int main(void) {
                     result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
                     if(result<=0)
                         continue;
+                    pthread_mutex_lock(&log_lock); 
                     LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
+                    pthread_mutex_unlock(&log_lock); 
 #ifdef MULTI_THREAD
-                    pthread_mutex_lock(&cond_lock); //Lost Wakeup 이슈로 락
+                    
                     for(int i=0;i<MAX_THREAD_POOL;i++){
-                        if(!thread_cond[i].busy){
+                        pthread_mutex_lock(&cond_lock); //Lost Wakeup 이슈로 락
+                        if(!thread_cond[i].ready){
                             memset(&task_arg[i], 0, sizeof(task_arg_t));
                             task_arg[i].epoll_fd = epoll_fd;
                             task_arg[i].ev = &ev;
                             task_arg[i].func = remote_read_process;
                             task_arg[i].task = (task_t*)calloc(1,sizeof(task_t));
                             memcpy(task_arg[i].task, task, sizeof(task_t));
-                            thread_cond[i].busy=1;
                             pthread_mutex_lock(&mutex_lock); 
                             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                             pthread_mutex_unlock(&mutex_lock); 
+                            pthread_mutex_lock(&log_lock); 
                             LOG(INFO, "Thread[%d] IN cfd[%d], rfd[%d], request host[%s],  client port[%d]", i, task->client_fd, task->remote_fd, task->req->host,  task->client_port);
+                            pthread_mutex_unlock(&log_lock); 
+                            thread_cond[i].ready = 1;
                             pthread_cond_signal(thread_cond[i].cond);
+                            pthread_mutex_unlock(&cond_lock);
                             break;
                         }
                         else{
                             if(i==MAX_THREAD_POOL-1){
+                                pthread_mutex_lock(&log_lock); 
                                 LOG(INFO, "all thread is busy");
-                                continue;
+                                pthread_mutex_unlock(&log_lock); 
                             }
+                            pthread_mutex_unlock(&cond_lock);
                         }
                     }
-                    pthread_mutex_unlock(&cond_lock);
+                    
                     
 #else
                     int ret = remote_read(task, epoll_fd, &ev);
@@ -264,12 +291,16 @@ int main(void) {
 
                 } 
                 else if (task->state == STATE_REMOTE_WRITE) {
+                    pthread_mutex_lock(&log_lock); 
                     LOG(INFO,  ">> STATE_REMOTE_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
+                    pthread_mutex_unlock(&log_lock); 
                     int ret = remote_write(task, epoll_fd, &ev);  
                 } 
                 else if (task->state == STATE_CLIENT_PROXY_SSL_CONN)
                 {
+                    pthread_mutex_lock(&log_lock); 
                     LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
+                    pthread_mutex_unlock(&log_lock); 
                     int ret = client_proxy_ssl_conn(task, epoll_fd, &ev);
                 }
             }

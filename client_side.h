@@ -65,8 +65,9 @@ typedef struct task_arg_t{
 }task_arg_t;
 
 typedef struct thread_cond_t{
-    int busy;
+    int ready;
     pthread_cond_t *cond;
+    pthread_cond_t *thread_cond_lock;
 }thread_cond_t;
 
 #endif //CLIENT_SIDE

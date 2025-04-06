@@ -32,7 +32,7 @@ extern int timeout;
 extern int serverport;
 extern EVP_PKEY *ca_key;
 extern X509 *ca_cert;
-
+extern log_lock; 
 
 int init_proxy()
 {
@@ -41,7 +41,9 @@ int init_proxy()
 
     if(load_config()!=STAT_OK)
     {
+        pthread_mutex_lock(&log_lock); 
         LOG(ERROR, "config load error");
+        pthread_mutex_unlock(&log_lock); 
     }
 
     const char *cert_file = get_config_string("CERT_FILE");
@@ -54,10 +56,14 @@ int init_proxy()
     if((ret=load_private_key(key_file,&ca_key)) == ENOENT)
     {
         //키 파일 존재하지 않는 경우 생성
+        pthread_mutex_lock(&log_lock); 
         LOG(INFO, "Create ca key");
+        pthread_mutex_unlock(&log_lock); 
         EVP_PKEY *key = generate_rsa_key();
         if (!key) {
+            pthread_mutex_lock(&log_lock); 
             LOG(ERROR, "Create key fail");
+            pthread_mutex_unlock(&log_lock); 
             return STAT_FAIL;
         }
         if(save_key(key, key_file) == STAT_FAIL)
