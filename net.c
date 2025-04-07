@@ -455,12 +455,12 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
     memset(task->buffer, 0, MAX_BUFFER_SIZE);
     task->buffer_len = 0;
     while(1) { //데이터 전부 읽는 방식 수정 필요
+        memset(task->buffer, 0, MAX_BUFFER_SIZE);
         int ret = SSL_read(task->client_ssl, task->buffer, MAX_BUFFER_SIZE); 
         if (ret > 0) {
-            task->buffer_len = task->buffer_len + ret;
             //sgseo debug
             //바로 write
-            int write_result = SSL_write(task->remote_ssl, task->buffer, task->buffer_len);
+            int write_result = SSL_write(task->remote_ssl, task->buffer, ret);
             continue;
             // break;
         } else if (ret == 0) {
@@ -483,6 +483,7 @@ int client_read_with_https(task_t* task, int epoll_fd, struct epoll_event *ev)
                 pthread_mutex_lock(&log_lock); 
                 LOG(ERROR,"Client SSL Read error - %d\n", err);
                 pthread_mutex_unlock(&log_lock); 
+                break;
                 // exit(1);
             }
         }
