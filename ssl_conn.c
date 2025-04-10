@@ -50,19 +50,19 @@ int load_private_key(const char *key_file, EVP_PKEY **key) {
     FILE *fp = fopen(key_file, "r");
     if (fp==NULL) {
         if(errno == ENOENT){
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(INFO, "Key file does not exist");
-            pthread_mutex_unlock(&log_lock); 
+             
             return ENOENT;
         } else if (errno == EACCES){
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR, "Can't access the file. Permission error");
-            pthread_mutex_unlock(&log_lock); 
+             
             return EACCES;
         } else{
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR, "Can't access the file.");
-            pthread_mutex_unlock(&log_lock); 
+             
             return STAT_FAIL;
         }
     }
@@ -75,19 +75,19 @@ int load_certificate(const char *cert_file, X509 **cert) {
     FILE *fp = fopen(cert_file, "r");
     if (fp==NULL) {
         if(errno == ENOENT){
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(INFO, "Key file does not exist");
-            pthread_mutex_unlock(&log_lock); 
+             
             return ENOENT;
         } else if (errno == EACCES){
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR, "Can't access the file. Permission error");
-            pthread_mutex_unlock(&log_lock); 
+             
             return EACCES;
         } else{
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR, "Can't access the file.");
-            pthread_mutex_unlock(&log_lock); 
+             
             return STAT_FAIL;
         }
     }
@@ -165,9 +165,9 @@ int add_ext(X509* ca_cert, X509* leaf_cert, int nid, const char* value)
     //NID_basic_constraints, "CA:FALSE"
     ext = X509V3_EXT_conf_nid(NULL, &ctx, nid,  value);
     if(!ext){
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR, "X509V3_EXT_conf_nid error");
-        pthread_mutex_unlock(&log_lock); 
+         
         return STAT_FAIL;
     }
     X509_add_ext(leaf_cert, ext, -1); //error 처리 필요
@@ -201,9 +201,9 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
     name = X509_NAME_new();
     if(name == NULL)
     {
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR, "X509_NAME_new error ");
-        pthread_mutex_unlock(&log_lock); 
+         
     }
     // 주체 이름에 도메인 정보 추가
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char*)common_name, -1, -1, 0);
@@ -217,16 +217,16 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
         //키 사용 필드 critical
         if(add_ext(ca_cert, cert, NID_key_usage, "critical,digitalSignature,keyCertSign,cRLSign")!=STAT_OK)
         {
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR,"X509 add_ext fail");
-            pthread_mutex_unlock(&log_lock); 
+             
             return NULL;
         }
         if(add_ext(ca_cert, cert,  NID_basic_constraints, "critical,CA:TRUE")!=STAT_OK)
         {
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR,"X509 add_ext fail");
-            pthread_mutex_unlock(&log_lock); 
+             
             return NULL;
         }
 
@@ -238,16 +238,16 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
 
         if(add_ext(ca_cert, cert, NID_key_usage, "critical,digitalSignature")!=STAT_OK)
         {
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR,"X509 add_ext fail");
-            pthread_mutex_unlock(&log_lock); 
+             
             return NULL;
         }
         if(add_ext(ca_cert, cert,  NID_basic_constraints, "critical,CA:FALSE")!=STAT_OK)
         {
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR,"X509 add_ext fail");
-            pthread_mutex_unlock(&log_lock); 
+             
             return NULL;
         }
 
@@ -266,16 +266,16 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
             }
             
         }
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(INFO, "domain: %s", san_field);
-        pthread_mutex_unlock(&log_lock); 
+         
 
 
         if(add_ext(ca_cert, cert, NID_subject_alt_name, (const char*)san_field)!=STAT_OK)
         {
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR,"X509 add_ext fail");
-            pthread_mutex_unlock(&log_lock); 
+             
             return NULL;
         }
         
@@ -324,15 +324,15 @@ int save_cert(X509 *cert, const char *cert_path){
 int save_key(EVP_PKEY *key, const char *key_path){
     FILE *key_file = fopen(key_path, "wb");
     if (!key_file) {
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR, "Failed to open private key file");
-        pthread_mutex_unlock(&log_lock); 
+         
         return STAT_FAIL;
     }
     if (!PEM_write_PrivateKey(key_file, key, NULL, NULL, 0, NULL, NULL)) {
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR, "Failed to write private key to file");
-        pthread_mutex_unlock(&log_lock); 
+         
         fclose(key_file);
         return STAT_FAIL;
     }
@@ -371,18 +371,18 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
         ssl_key = generate_rsa_key();
     // EVP_PKEY *key = generate_rsa_key();
     if (!ssl_key) {
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR,"Failed to generate RSA key");
-        pthread_mutex_unlock(&log_lock); 
+         
         return -1;
     }
 
     X509 *dynamic_cert = generate_cert(domain, ssl_key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(ssl_key);
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR,"Failed to generate dynamic certificate");
-        pthread_mutex_unlock(&log_lock); 
+         
         return -1;
     }
     

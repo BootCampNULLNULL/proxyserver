@@ -60,9 +60,9 @@ int main(void) {
 
 
     if(init_proxy()!=STAT_OK){
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR, "proxy init fail");
-        pthread_mutex_unlock(&log_lock); 
+         
     }
 
     if (!ca_key || !ca_cert) {
@@ -116,9 +116,9 @@ int main(void) {
     for(int i=0;i<MAX_THREAD_POOL;i++){
         pthread_mutex_lock(&async_mutex); 
         if(pthread_create(&thread, NULL, thread_func, (void *)&i) < 0){
-            pthread_mutex_lock(&log_lock); 
+             
             LOG(ERROR, "thread create error");
-            pthread_mutex_unlock(&log_lock); 
+             
         }
         pthread_cond_wait(&async_cond, &async_mutex);
         pthread_mutex_unlock(&async_mutex);
@@ -152,9 +152,9 @@ int main(void) {
                     struct sockaddr_in cliaddr;
                     socklen_t len = sizeof(cliaddr);
                     int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
-                    pthread_mutex_lock(&log_lock); 
+                     
                     LOG(INFO, "new accept client fd[%d]",client_fd);
-                    pthread_mutex_unlock(&log_lock); 
+                     
                     if(client_fd < 0) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK) {
                             // 모든 연결이 처리됨
@@ -229,16 +229,16 @@ int main(void) {
                             // free(task);
                         }
                     }
-                    pthread_mutex_lock(&log_lock); 
+                     
                     LOG(INFO,  ">> STATE_CLIENT_READ c[%d] r[%d] event_count[%d]  client port[%d]<<",task->client_fd,task->remote_fd, event_count,  task->client_port);
-                    pthread_mutex_unlock(&log_lock); 
+                     
                     int ret = client_read(task, epoll_fd, &ev);    
                 } 
                 else if (task->state == STATE_CLIENT_WRITE) 
                 {
-                    pthread_mutex_lock(&log_lock); 
+                     
                     LOG(INFO,  ">> STATE_CLIENT_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd, event_count);
-                    pthread_mutex_unlock(&log_lock); 
+                     
                     int ret = client_write(task, epoll_fd, &ev);
                 }
                 else if (task->state == STATE_REMOTE_READ) {
@@ -249,9 +249,9 @@ int main(void) {
                     result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
                     if(result<=0)
                         continue;
-                    pthread_mutex_lock(&log_lock); 
+                     
                     LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
-                    pthread_mutex_unlock(&log_lock); 
+                     
 #ifdef MULTI_THREAD
                     
                     for(int i=0;i<MAX_THREAD_POOL;i++){
@@ -266,9 +266,9 @@ int main(void) {
                             pthread_mutex_lock(&mutex_lock); 
                             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                             pthread_mutex_unlock(&mutex_lock); 
-                            pthread_mutex_lock(&log_lock); 
+                             
                             LOG(INFO, "Thread[%d] IN cfd[%d], rfd[%d], request host[%s],  client port[%d]", i, task->client_fd, task->remote_fd, task->req->host,  task->client_port);
-                            pthread_mutex_unlock(&log_lock); 
+                             
                             thread_cond[i].ready = 1;
                             pthread_cond_signal(thread_cond[i].cond);
                             pthread_mutex_unlock(&cond_lock);
@@ -276,9 +276,9 @@ int main(void) {
                         }
                         else{
                             if(i==MAX_THREAD_POOL-1){
-                                pthread_mutex_lock(&log_lock); 
+                                 
                                 LOG(INFO, "all thread is busy");
-                                pthread_mutex_unlock(&log_lock); 
+                                 
                             }
                             pthread_mutex_unlock(&cond_lock);
                         }
@@ -291,16 +291,16 @@ int main(void) {
 
                 } 
                 else if (task->state == STATE_REMOTE_WRITE) {
-                    pthread_mutex_lock(&log_lock); 
+                     
                     LOG(INFO,  ">> STATE_REMOTE_WRITE c[%d] r[%d] event_count[%d]<<", task->client_fd, task->remote_fd,event_count);
-                    pthread_mutex_unlock(&log_lock); 
+                     
                     int ret = remote_write(task, epoll_fd, &ev);  
                 } 
                 else if (task->state == STATE_CLIENT_PROXY_SSL_CONN)
                 {
-                    pthread_mutex_lock(&log_lock); 
+                     
                     LOG(INFO,  ">> STATE_CLIENT_PROXY_SSL_CONN c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
-                    pthread_mutex_unlock(&log_lock); 
+                     
                     int ret = client_proxy_ssl_conn(task, epoll_fd, &ev);
                 }
             }

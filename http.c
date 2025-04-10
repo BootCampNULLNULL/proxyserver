@@ -94,9 +94,9 @@ void read_request_line(const char *buffer, HTTPRequest *request) {
         request->protocol_minor_version = version[7] - '0';
     } else {
         fprintf(stderr, "지원되지 않는 HTTP 버전\n");
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(INFO, "지원되지 않는 HTTP 버전 [%s]",version);
-        pthread_mutex_unlock(&log_lock); 
+         
         free(line);
         // exit(EXIT_FAILURE);
     }
@@ -144,9 +144,9 @@ HTTPRequest *read_request(const char *buffer) {
     // 요청 라인 파싱
     const char *line_end = strstr(current, "\r\n");
     if (!line_end) {
-        pthread_mutex_lock(&log_lock); 
+         
         LOG(ERROR, "잘못된 HTTP 요청\n");
-        pthread_mutex_unlock(&log_lock); 
+         
         return NULL;
     }
     size_t line_length = line_end - current;
@@ -277,9 +277,9 @@ int get_IP(char* ip_str, const char* hostname, int port) {
 
     // IP 주소를 문자열로 변환
     inet_ntop(res->ai_family, addr, ip_str, INET_ADDRSTRLEN);
-    pthread_mutex_lock(&log_lock); 
+     
     LOG(DEBUG,"  %s: %s\n", ipver, ip_str);
-    pthread_mutex_unlock(&log_lock); 
+     
 
     freeaddrinfo(res);
     return 0;
