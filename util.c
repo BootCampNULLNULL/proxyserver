@@ -33,6 +33,18 @@ extern int serverport;
 extern EVP_PKEY *ca_key;
 extern X509 *ca_cert;
 extern log_lock; 
+extern LogLevel current_log_level;
+
+
+LogLevel StringToLogLevel(const char* str) {
+    if (strcmp(str, "TRACE") == 0) return TRACE;
+    if (strcmp(str, "DEBUG") == 0) return DEBUG;
+    if (strcmp(str, "INFO")  == 0) return INFO;
+    if (strcmp(str, "WARN")  == 0) return WARN;
+    if (strcmp(str, "ERROR") == 0) return ERROR;
+    return -1; // 또는 LOG_LEVEL_COUNT 같은 무효 값
+}
+
 
 int init_proxy()
 {
@@ -50,6 +62,12 @@ int init_proxy()
     const char *key_file = get_config_string("KEY_FILE");
     serverport = get_config_int("SERVERPORT");
     timeout = get_config_int("CONNECT_TIME");
+
+    const char *log_level = get_config_string("LOG_LEVEL");
+    if((current_log_level = StringToLogLevel(log_level)) == -1){
+        perror("지원하지 않는 로그 레빌");
+        exit(1);
+    }
 
     int ret = 0;
 

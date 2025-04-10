@@ -11,7 +11,7 @@
 #define MAX_LOG_MESSAGE 4096   // 최대 로그 메시지 길이
 
 
-static LogLevel current_log_level = TRACE;  // 기본 로그 레벨
+LogLevel current_log_level;  // 기본 로그 레벨
 static FILE *log_fp = NULL;  // 로그 파일 포인터
 
 static pthread_mutex_t log_lock= PTHREAD_MUTEX_INITIALIZER; 
@@ -32,6 +32,7 @@ const char *log_level_to_string(LogLevel level) {
 
 // 로그 출력 함수 (vsnprintf 사용하여 포맷 지원)
 void log_message(LogLevel level, const char *file, int line, const char *format, ...) {
+
     if (level < current_log_level) return;  // 설정된 로그 레벨보다 낮으면 무시
 
     char timestamp[20];
@@ -52,8 +53,6 @@ void log_message(LogLevel level, const char *file, int line, const char *format,
     va_end(args);
     pid_t pid = getpid();  // 프로세스 ID 가져오기
     pthread_t tid = pthread_self();  // 스레드 ID 가져오기
-
-
     // 파일 출력
     if (log_fp) {
         fprintf(log_fp, "[%s][%s](p:%d t:%lu)(%s:%d) %s\n", log_level_to_string(level), timestamp, pid, tid/10000000,file, line, log_msg);
