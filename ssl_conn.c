@@ -46,7 +46,7 @@ void cleanup_openssl() {
 // OpenSSL 초기화
 void handle_openssl_error() {
     ERR_print_errors_fp(stderr);
-    exit(EXIT_FAILURE);
+    // exit(EXIT_FAILURE);
 }
 
 /* 키 및 인증서 로드*/

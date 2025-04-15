@@ -66,7 +66,7 @@ int main(void) {
     }
 
     if (!ca_key || !ca_cert) {
-        fprintf(stderr, "Failed to load CA key or certificate\n");
+        LOG(ERROR, "Failed to load CA key or certificate\n");
         exit(EXIT_FAILURE);
     }
 
@@ -83,7 +83,7 @@ int main(void) {
     seraddr.sin_port = htons(serverport);
 
     if (bind(server_fd, (struct sockaddr*)&seraddr, sizeof(seraddr)) < 0) {
-        perror("Bind failed");
+        LOG(ERROR,"Bind failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
@@ -92,7 +92,7 @@ int main(void) {
     // epoll 인스턴스 생성
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        perror("Epoll creation failed");
+        LOG(ERROR,"Epoll creation failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
@@ -131,7 +131,7 @@ int main(void) {
     ev.data.fd = server_fd;
     pthread_mutex_lock(&mutex_lock); 
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ev) == -1) {
-        perror("Epoll control failed");
+        LOG(ERROR,"Epoll control failed");
         close(server_fd);
         close(epoll_fd);
         exit(EXIT_FAILURE);
@@ -141,7 +141,7 @@ int main(void) {
         int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         if (event_count == -1) {
             if (errno == EINTR) continue; // 신호로 인한 중단은 무시
-            perror("Epoll wait failed");
+            LOG(ERROR,"Epoll wait failed");
             break;
         }
         for (int i = 0; i < event_count; i++) {
@@ -224,9 +224,11 @@ int main(void) {
                         if(task->remote_fd != -1){
                             epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                             close(task->remote_fd);
+                            task->remote_fd = -1;
                         }
                         pthread_mutex_unlock(&mutex_lock); 
                         close(task->client_fd);
+                        task->client_fd = -1;
                         // free(task); // retmote task free 필요
                         continue;
                     }
@@ -243,9 +245,11 @@ int main(void) {
                             if(task->remote_fd != -1){
                                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
                                 close(task->remote_fd);
+                                task->remote_fd = -1;
                             }
                             pthread_mutex_unlock(&mutex_lock); 
                             close(task->client_fd);
+                            task->client_fd = -1;
                             // free(task); // retmote task free 필요
                             continue;
                         }
@@ -276,6 +280,8 @@ int main(void) {
                         pthread_mutex_unlock(&mutex_lock); 
                         close(task->remote_fd);
                         close(task->client_fd);
+                        task->remote_fd = -1;
+                        task->client_fd = -1;
                         free(task); // client task free 필요
                         continue;
                     }
@@ -296,6 +302,8 @@ int main(void) {
                             pthread_mutex_unlock(&mutex_lock);
                             close(task->client_fd); 
                             close(task->remote_fd);
+                            task->client_fd =-1;
+                            task->remote_fd = -1;
                             free(task); // client_fd task free 필요
                             continue;
                         }
