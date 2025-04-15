@@ -29,6 +29,11 @@ extern pthread_mutex_t log_lock;
 static FILE *sessing_key_fp = NULL;
 
 void initialize_openssl() {
+
+    if (OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL) != 1) {
+        LOG(ERROR, "Failed to initialize OpenSSL");
+        exit(1);
+    }
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
 }
@@ -460,6 +465,7 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
     if (!save_cert_and_key(dynamic_cert, key, cert_file, key_file)) {
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
+         LOG(ERROR,"save_cert_and_key");
         close(client_sock);
         return NULL;
     }
