@@ -74,44 +74,66 @@ void set_blocking(int fd)
     flags &= ~O_NONBLOCK; //논블록 플래그 제거
 }
 
+
 /**
- * @brief 도메인명에서 호스트명 획득하여 remote 서버와 통신을 위한 fd 생성
+ * @brief thread safe 한 getaddrinfo 함수로 수정
  * 
  * @param hostname 
  * @param port 
- * @return int file descriptor
+ * @return int 
  */
-int connect_remote_http(const char* hostname, int port)
-{
-    struct hostent *host;
-    if((host = gethostbyname(hostname)) == NULL) {
-        perror(hostname);
-        abort();
+int connect_remote_http(const char *hostname, int port) {
+    struct addrinfo hints, *res, *p;
+    int sockfd;
+    int status;
+    const char port_str[6];  // 최대 5자리 숫자 + null
+    snprintf(port_str, sizeof(port_str), "%d", port);
+
+    // hints 설정
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;        // IPv4 (AF_UNSPEC: IPv4 + IPv6)
+    hints.ai_socktype = SOCK_STREAM;  // TCP
+
+    // getaddrinfo 호출
+    if ((status = getaddrinfo(hostname, port_str, &hints, &res)) != 0) {
+        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        return -1;
     }
 
-    // remote 소켓 연결
-    int remote_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(remote_fd < 0) {
-        log_exit("Remote socket creation failed");
-        //perror("Remote socket creation failed");
-    }
+    // 주소 목록 순회하며 connect 시도
+    for (p = res; p != NULL; p = p->ai_next) {
+        // 소켓 생성
+        sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (sockfd == -1) {
+            perror("socket");
+            continue;
+        }
 
-
-    struct sockaddr_in remoteaddr;
-    memset(&remoteaddr, 0, sizeof(remoteaddr));
-    remoteaddr.sin_family = AF_INET;
-    remoteaddr.sin_addr.s_addr = *(long*)(host->h_addr_list[0]);
-    remoteaddr.sin_port = htons(port);
-    connect(remote_fd, (struct sockaddr*)&remoteaddr, sizeof(remoteaddr));
-    set_nonblocking(remote_fd);
-
+        // 서버에 연결
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            perror("connect");
+            close(sockfd);
+            continue;
+        }
     char ip_str[INET_ADDRSTRLEN];  // INET_ADDRSTRLEN = 16
-    inet_ntop(AF_INET, &(remoteaddr.sin_addr), ip_str, INET_ADDRSTRLEN);
-     
+        inet_ntop(AF_INET, p->ai_addr, ip_str, INET_ADDRSTRLEN);
     LOG(DEBUG, "remote ip: %s", ip_str);
      
+        break; // 연결 성공
+    }
 
-    return remote_fd;
+    freeaddrinfo(res); // 반드시 해제
+
+    if (p == NULL) {
+        fprintf(stderr, "Failed to connect to %s:%s\n", hostname, port_str);
+        return -1;
+    }
+
+    LOG(DEBUG,"Connected to %s:%s (socket %d)\n", hostname, port_str, sockfd);
+
+    set_nonblocking(sockfd);
+
+    return sockfd;
 }
 
 /**
