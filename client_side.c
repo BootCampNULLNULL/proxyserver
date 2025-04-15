@@ -212,11 +212,24 @@ int main(void) {
                 //     }
                 // }
                 if (task->state == STATE_CLIENT_READ) {
-                    // if (events[i].events & EPOLLRDHUP) {
-                    //     printf("Client disconnected (EPOLLRDHUP)\n");
-                    //     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                    //     close(task->client_fd);
-                    // }
+                    if (events[i].events &  (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+                        if(events[i].events & EPOLLERR)
+                            LOG(INFO, "Client disconnected EPOLLERR");
+                        else if(events[i].events & EPOLLHUP)
+                            LOG(INFO, "Client disconnected EPOLLHUP");
+                        else if(events[i].events & EPOLLRDHUP)
+                            LOG(INFO, "Client disconnected EPOLLRDHUP");
+                        pthread_mutex_lock(&mutex_lock); 
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                        if(task->remote_fd != -1){
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                            close(task->remote_fd);
+                        }
+                        pthread_mutex_unlock(&mutex_lock); 
+                        close(task->client_fd);
+                        // free(task); // retmote task free 필요
+                        continue;
+                    }
                     int result = 0;
                     char strTmp[MAX_BUFFER_SIZE] = {0,};
                     result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
@@ -224,9 +237,17 @@ int main(void) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK)
                             continue;
                         else{
-                            // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
-                            // close(task->client_fd);
-                            // free(task);
+                            LOG(ERROR, "client read error[%s] c[%d] r[%d] event_count[%d]  client port[%d]<<", strerror(errno),task->client_fd,task->remote_fd, event_count,  task->client_port);
+                            pthread_mutex_lock(&mutex_lock); 
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                            if(task->remote_fd != -1){
+                                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                                close(task->remote_fd);
+                            }
+                            pthread_mutex_unlock(&mutex_lock); 
+                            close(task->client_fd);
+                            // free(task); // retmote task free 필요
+                            continue;
                         }
                     }
                      
@@ -244,11 +265,42 @@ int main(void) {
                 else if (task->state == STATE_REMOTE_READ) {
                     // 원격 서버 데이터 수신
                     // recv 값 유효성 검사해서 유효하지 못한 응답일 경우 소켓 닫는 로직 필요
+                    // result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
+                    // if(result<=0)
+                    //     continue;
+                    if (events[i].events &  (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+                        LOG(INFO, "Remote disconnected (EPOLLERR | EPOLLHUP | EPOLLRDHUP)");
+                        pthread_mutex_lock(&mutex_lock); 
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                        pthread_mutex_unlock(&mutex_lock); 
+                        close(task->remote_fd);
+                        close(task->client_fd);
+                        free(task); // client task free 필요
+                        continue;
+                    }
                     int result = 0;
                     char strTmp[MAX_BUFFER_SIZE] = {0,};
-                    result = recv(task->remote_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
-                    if(result<=0)
-                        continue;
+                    result = recv(task->client_fd, strTmp, MAX_BUFFER_SIZE, MSG_PEEK);
+                    if(result<=0){ 
+                        if(errno == EAGAIN || errno == EWOULDBLOCK){
+                            //nst의 경우 SSL_read 해서 클라이언트로 보낸다.
+                            // recv 버퍼에서 안 읽는 경우 계속 recv 버퍼에 남아서 read 이벤트 감시됨
+                            // continue;
+                        }
+                        else{
+                            LOG(ERROR, "client read error[%s]", strerror(errno));
+                            pthread_mutex_lock(&mutex_lock);
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->client_fd, NULL);
+                            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, task->remote_fd, NULL);
+                            pthread_mutex_unlock(&mutex_lock);
+                            close(task->client_fd); 
+                            close(task->remote_fd);
+                            free(task); // client_fd task free 필요
+                            continue;
+                        }
+                    }
+
                      
                     LOG(INFO,  ">> STATE_REMOTE_READ c[%d] r[%d] event_count[%d]  client port[%d]<<", task->client_fd, task->remote_fd,event_count,  task->client_port);
                      

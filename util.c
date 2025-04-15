@@ -65,7 +65,7 @@ int init_proxy()
 
     const char *log_level = get_config_string("LOG_LEVEL");
     if((current_log_level = StringToLogLevel(log_level)) == -1){
-        perror("지원하지 않는 로그 레빌");
+        LOG(ERROR,"지원하지 않는 로그 레빌");
         exit(1);
     }
 
