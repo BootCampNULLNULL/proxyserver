@@ -29,14 +29,14 @@ typedef enum task_state_t {
 } task_state_t;
 
 typedef struct task_t {
-    int client_fd;
+    int *client_fd;
     bool client_side_https; //client<->proxy https 통신
     bool remote_side_https; //proxy<->remote https 통신
     SSL_CTX* client_ctx;
     SSL* client_ssl;
     SSL_CTX* before_client_ctx;
     SSL* before_client_ssl;
-    int remote_fd;
+    int *remote_fd;
     SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     BIO* sbio;

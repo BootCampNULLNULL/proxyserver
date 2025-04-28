@@ -8,6 +8,10 @@ int handle_recv_error(int sockfd);
 int initial_read(task_t* task);
 int recv_data(task_t* task, int epoll_fd);
 
+void client_release(task_t* task);
+void remote_release(task_t* task);
+// void task_release(task_t* task);
+
 int connect_remote_http(const char* hostname, int port);
 SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx, const char* host);
 void log_exit(const char *fmt, ...);

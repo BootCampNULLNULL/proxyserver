@@ -38,7 +38,7 @@ void parse_query_params(char *query_string, HTTPRequest *request) {
     while (param) {
         char *equal = strchr(param, '=');
         if (!equal) {
-            LOG(ERROR, "잘못된 쿼리 파라미터: %s\n", param);
+            LOG(ERROR, "잘못된 쿼리 파라미터: %s", param);
             exit(EXIT_FAILURE);
         }
 
@@ -111,7 +111,7 @@ void read_header_field(const char *buffer, HTTPRequest *request) {
 
     if (!colon) {
         free(line);
-        LOG(ERROR, "잘못된 헤더 필드\n");
+        LOG(ERROR, "잘못된 헤더 필드");
         exit(EXIT_FAILURE);
     }
 
