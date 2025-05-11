@@ -13,9 +13,12 @@
 #include <errno.h>
 #include <netdb.h>
 #include <sys/types.h>
+#include <strings.h>
 #include "http.h"
 #include "errcode.h"
 #include "log.h"
+
+extern pthread_mutex_t log_lock; 
 
 char *trim_whitespace(char *str) {
     char *end;
@@ -36,7 +39,7 @@ void parse_query_params(char *query_string, HTTPRequest *request) {
     while (param) {
         char *equal = strchr(param, '=');
         if (!equal) {
-            fprintf(stderr, "잘못된 쿼리 파라미터: %s\n", param);
+            LOG(ERROR, "잘못된 쿼리 파라미터: %s", param);
             exit(EXIT_FAILURE);
         }
 
@@ -70,9 +73,11 @@ void read_request_line(const char *buffer, HTTPRequest *request) {
 
     if (!method || !path_with_query || !version) {
         free(line);
-        fprintf(stderr, "잘못된 요청 라인\n");
-        exit(EXIT_FAILURE);
+        LOG(ERROR, "잘못된 요청 라인\n");
+        // exit(EXIT_FAILURE);
+        return;
     }
+
 
     request->method = strdup(method);
 
@@ -90,7 +95,9 @@ void read_request_line(const char *buffer, HTTPRequest *request) {
         request->protocol_minor_version = version[7] - '0';
     } else {
         fprintf(stderr, "지원되지 않는 HTTP 버전\n");
+         
         LOG(INFO, "지원되지 않는 HTTP 버전 [%s]",version);
+         
         free(line);
         // exit(EXIT_FAILURE);
     }
@@ -105,7 +112,7 @@ void read_header_field(const char *buffer, HTTPRequest *request) {
 
     if (!colon) {
         free(line);
-        fprintf(stderr, "잘못된 헤더 필드\n");
+        LOG(ERROR, "잘못된 헤더 필드");
         exit(EXIT_FAILURE);
     }
 
@@ -133,13 +140,35 @@ void read_header_field(const char *buffer, HTTPRequest *request) {
 HTTPRequest *read_request(const char *buffer) {
     HTTPRequest *request = (HTTPRequest*)calloc(1, sizeof(HTTPRequest));
 
+// typedef struct HTTPRequest {
+//     int protocol_minor_version;
+//     char *method;
+//     char *path;
+//     int port;
+//     char* host;
+//     struct HTTPQueryParam *query;
+//     struct HTTPHeaderField *header;
+//     char *body;
+//     long length;
+// } HTTPRequest;
+    request->protocol_minor_version = 0;
+    request->method = NULL;
+    request->path = NULL;
+    request->port = 0;  
+    request->host = NULL;
+    request->query = NULL;
+    request->header = NULL;
+    request->body = NULL;
+    request->length = 0;
+
     const char *current = buffer;
     char line[MAX_LINE_SIZE];
-    LOG(INFO, "read request : %s",buffer);
     // 요청 라인 파싱
     const char *line_end = strstr(current, "\r\n");
     if (!line_end) {
+         
         LOG(ERROR, "잘못된 HTTP 요청\n");
+         
         return NULL;
     }
     size_t line_length = line_end - current;
@@ -158,7 +187,9 @@ HTTPRequest *read_request(const char *buffer) {
     }
 
     // Host 필드와 포트 설정
-    request->host = find_Host_field(request->header);
+    if(request->header){
+        request->host = find_Host_field(request->header);
+    }
     if (request->host) {
         request->port = find_port(request->host);
     } else {
@@ -270,9 +301,45 @@ int get_IP(char* ip_str, const char* hostname, int port) {
 
     // IP 주소를 문자열로 변환
     inet_ntop(res->ai_family, addr, ip_str, INET_ADDRSTRLEN);
+     
     LOG(DEBUG,"  %s: %s\n", ipver, ip_str);
+     
 
     freeaddrinfo(res);
     return 0;
+}
+
+int parse_proxy_authorization(const char* buffer, char *result, int result_size) {
+    const char* line = buffer;
+    LOG(DEBUG,"parse_proxy_authorization buffer: %s", buffer);
+    while (line && *line) {
+        LOG(DEBUG,"parse_proxy_authorization line: %s", line);
+        const char* next_line = strstr(line, "\r\n");
+        size_t line_len = next_line ? (size_t)(next_line - line) : strlen(line);
+
+        // "Proxy-Authorization:" 헤더 찾기
+        if (line_len > 20 && strncasecmp(line, "Proxy-Authorization:", 20) == 0) {
+            const char* p = line + 20;
+
+            // " Basic " 또는 "Basic " 이후 Base64 값 추출
+            while (*p == ' ') p++;
+            if (strncasecmp(p, "Basic", 5) != 0) return NULL;
+
+            p += 5;
+            while (*p == ' ') p++;
+
+            size_t len = (next_line ? (size_t)(next_line - p) : strlen(p));
+            if (len >= result_size) len = result_size - 1;
+            strncpy(result, p, len);
+            result[len] = '\0';
+
+            return STAT_OK;
+        }
+
+        // 다음 줄로 이동
+        line = next_line ? next_line + 2 : NULL;
+    }
+
+    return STAT_FAIL;
 }
 

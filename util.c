@@ -20,18 +20,32 @@
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
 #include <time.h>
+#include <sqlite3.h>
 #include "util.h"
 #include "errcode.h"
 #include "config_parser.h"
 #include "util.h"
 #include "log.h"
 #include "ssl_conn.h"
+#include "db_conn.h"
 
 
 extern int timeout;
 extern int serverport;
 extern EVP_PKEY *ca_key;
 extern X509 *ca_cert;
+extern log_lock; 
+extern LogLevel current_log_level;
+
+
+LogLevel StringToLogLevel(const char* str) {
+    if (strcmp(str, "TRACE") == 0) return TRACE;
+    if (strcmp(str, "DEBUG") == 0) return DEBUG;
+    if (strcmp(str, "INFO")  == 0) return INFO;
+    if (strcmp(str, "WARN")  == 0) return WARN;
+    if (strcmp(str, "ERROR") == 0) return ERROR;
+    return -1; // 또는 LOG_LEVEL_COUNT 같은 무효 값
+}
 
 
 int init_proxy()
@@ -41,7 +55,9 @@ int init_proxy()
 
     if(load_config()!=STAT_OK)
     {
+         
         LOG(ERROR, "config load error");
+         
     }
 
     const char *cert_file = get_config_string("CERT_FILE");
@@ -49,15 +65,25 @@ int init_proxy()
     serverport = get_config_int("SERVERPORT");
     timeout = get_config_int("CONNECT_TIME");
 
+    const char *log_level = get_config_string("LOG_LEVEL");
+    if((current_log_level = StringToLogLevel(log_level)) == -1){
+        LOG(ERROR,"지원하지 않는 로그 레빌");
+        //exit(1);
+    }
+
     int ret = 0;
 
     if((ret=load_private_key(key_file,&ca_key)) == ENOENT)
     {
         //키 파일 존재하지 않는 경우 생성
+         
         LOG(INFO, "Create ca key");
+         
         EVP_PKEY *key = generate_rsa_key();
         if (!key) {
+             
             LOG(ERROR, "Create key fail");
+             
             return STAT_FAIL;
         }
         if(save_key(key, key_file) == STAT_FAIL)
@@ -89,7 +115,28 @@ int init_proxy()
     {
         return STAT_FAIL;
     }
+
+    init_db();
+    
+    
+
     return STAT_OK;
+}
+
+
+int base64_decode(const char *in, unsigned char *out) {
+    int len = strlen(in);
+    int padding = 0;
+
+    if (len >= 2) {
+        if (in[len - 1] == '=') padding++;
+        if (in[len - 2] == '=') padding++;
+    }
+
+    int out_len = EVP_DecodeBlock(out, (const unsigned char *)in, len);
+    if (out_len < 0) return -1;
+
+    return out_len - padding;
 }
 
 /**

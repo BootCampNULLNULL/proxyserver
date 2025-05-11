@@ -48,5 +48,6 @@ char* find_Host_field(HTTPHeaderField* head);
 int find_port(char* host);
 void free_request(HTTPRequest *request);
 int get_IP(char* ip_str, const char* hostname, int port);
+int parse_proxy_authorization(const char* buffer, char *result, int result_size);
 
 #endif //HTTP

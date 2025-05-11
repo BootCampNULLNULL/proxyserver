@@ -5,14 +5,9 @@
 #include "uthash.h"  // uthash 헤더 포함
 #include "config_parser.h"
 #include "errcode.h"
+#include "util.h"
+#include "log.h"
 
-
-// 해시 테이블 엔트리 구조체
-typedef struct {
-    char key[50];   // Key (문자열)
-    char value[50]; // Value (문자열)
-    UT_hash_handle hh;
-} HashEntry;
 
 static HashEntry *config_map = NULL;
 
@@ -24,7 +19,7 @@ void set_config_value(const char *key, const char *value) {
     HashEntry *entry;
     HASH_FIND_STR(config_map, key, entry);
     if (entry) {
-        printf("ERROR Key exists! Value: %s\n", entry->value);
+        LOG(ERROR, "ERROR Key exists! Value: %s\n", entry->value);
         return;
     } else {
         // Key-Value 추가

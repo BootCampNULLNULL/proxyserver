@@ -24,7 +24,16 @@
 #include "log.h"
 #include "config_parser.h"
 
+extern pthread_mutex_t log_lock; 
+
+static FILE *sessing_key_fp = NULL;
+
 void initialize_openssl() {
+
+    if (OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL) != 1) {
+        LOG(ERROR, "Failed to initialize OpenSSL");
+        //exit(1);
+    }
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
 }
@@ -37,7 +46,7 @@ void cleanup_openssl() {
 // OpenSSL 초기화
 void handle_openssl_error() {
     ERR_print_errors_fp(stderr);
-    exit(EXIT_FAILURE);
+    // exit(EXIT_FAILURE);
 }
 
 /* 키 및 인증서 로드*/
@@ -46,13 +55,19 @@ int load_private_key(const char *key_file, EVP_PKEY **key) {
     FILE *fp = fopen(key_file, "r");
     if (fp==NULL) {
         if(errno == ENOENT){
+             
             LOG(INFO, "Key file does not exist");
+             
             return ENOENT;
         } else if (errno == EACCES){
+             
             LOG(ERROR, "Can't access the file. Permission error");
+             
             return EACCES;
         } else{
+             
             LOG(ERROR, "Can't access the file.");
+             
             return STAT_FAIL;
         }
     }
@@ -65,19 +80,40 @@ int load_certificate(const char *cert_file, X509 **cert) {
     FILE *fp = fopen(cert_file, "r");
     if (fp==NULL) {
         if(errno == ENOENT){
+             
             LOG(INFO, "Key file does not exist");
+             
             return ENOENT;
         } else if (errno == EACCES){
+             
             LOG(ERROR, "Can't access the file. Permission error");
+             
             return EACCES;
         } else{
+             
             LOG(ERROR, "Can't access the file.");
+             
             return STAT_FAIL;
         }
     }
     *cert = PEM_read_X509(fp, NULL, NULL, NULL);
     fclose(fp);
     return STAT_OK;
+}
+
+/**
+ * @brief 세션키 저장을 위한 콜백 함수
+ * 
+ * @param ssl 
+ * @param line 
+ */
+void keylog_callback(const SSL *ssl, const char *line) {
+    if(!sessing_key_fp){
+        sessing_key_fp = fopen("sslkeys.log", "a");
+    }
+    else{
+        fprintf(sessing_key_fp, "%s\n", line);
+    }  
 }
 
 // RSA 키 생성
@@ -134,7 +170,9 @@ int add_ext(X509* ca_cert, X509* leaf_cert, int nid, const char* value)
     //NID_basic_constraints, "CA:FALSE"
     ext = X509V3_EXT_conf_nid(NULL, &ctx, nid,  value);
     if(!ext){
+         
         LOG(ERROR, "X509V3_EXT_conf_nid error");
+         
         return STAT_FAIL;
     }
     X509_add_ext(leaf_cert, ext, -1); //error 처리 필요
@@ -155,7 +193,12 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 1);
 
     // 인증서 유효기간 설정
-    X509_gmtime_adj(X509_get_notBefore(cert), 0);
+    ASN1_TIME *start = ASN1_TIME_new();
+    ASN1_TIME_set_string(start, "20250324120000Z"); // YYYYMMDDhhmmssZ (Z = UTC)
+
+    X509_set_notBefore(cert, start);
+    ASN1_TIME_free(start);  // 설정 후 해제
+    // X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 365 * 24 * 60 * 60);
 
     // 인증서 주체이름 설정
@@ -163,7 +206,9 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
     name = X509_NAME_new();
     if(name == NULL)
     {
+         
         LOG(ERROR, "X509_NAME_new error ");
+         
     }
     // 주체 이름에 도메인 정보 추가
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char*)common_name, -1, -1, 0);
@@ -177,12 +222,16 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
         //키 사용 필드 critical
         if(add_ext(ca_cert, cert, NID_key_usage, "critical,digitalSignature,keyCertSign,cRLSign")!=STAT_OK)
         {
+             
             LOG(ERROR,"X509 add_ext fail");
+             
             return NULL;
         }
         if(add_ext(ca_cert, cert,  NID_basic_constraints, "critical,CA:TRUE")!=STAT_OK)
         {
+             
             LOG(ERROR,"X509 add_ext fail");
+             
             return NULL;
         }
 
@@ -194,32 +243,44 @@ X509* generate_cert(const char* common_name, EVP_PKEY* key, X509* ca_cert, EVP_P
 
         if(add_ext(ca_cert, cert, NID_key_usage, "critical,digitalSignature")!=STAT_OK)
         {
+             
             LOG(ERROR,"X509 add_ext fail");
+             
             return NULL;
         }
         if(add_ext(ca_cert, cert,  NID_basic_constraints, "critical,CA:FALSE")!=STAT_OK)
         {
+             
             LOG(ERROR,"X509 add_ext fail");
+             
             return NULL;
         }
 
-        char san_field[100]={0,};
+        char san_field[1000]={0,};
         struct sockaddr_in sa;
         // IPv4 체크
         if (inet_pton(AF_INET, common_name, &(sa.sin_addr)) == 1) {
             sprintf(san_field, "IP:%s",common_name);
         }
         else{
+            sprintf(san_field, "DNS:%s",common_name);
+            char* posi = common_name;
+            while((posi = strchr(posi,'.'))){
+                posi++;
+                sprintf(san_field+strlen(san_field), ",DNS:*.%s",posi);                
+            }
             
-            sprintf(san_field, "DNS:*%s",strchr(common_name,'.'));
-            // sprintf(san_field, "DNS:%s",common_name);
         }
+         
         LOG(INFO, "domain: %s", san_field);
+         
 
 
         if(add_ext(ca_cert, cert, NID_subject_alt_name, (const char*)san_field)!=STAT_OK)
         {
+             
             LOG(ERROR,"X509 add_ext fail");
+             
             return NULL;
         }
         
@@ -268,11 +329,15 @@ int save_cert(X509 *cert, const char *cert_path){
 int save_key(EVP_PKEY *key, const char *key_path){
     FILE *key_file = fopen(key_path, "wb");
     if (!key_file) {
+         
         LOG(ERROR, "Failed to open private key file");
+         
         return STAT_FAIL;
     }
     if (!PEM_write_PrivateKey(key_file, key, NULL, NULL, 0, NULL, NULL)) {
+         
         LOG(ERROR, "Failed to write private key to file");
+         
         fclose(key_file);
         return STAT_FAIL;
     }
@@ -311,14 +376,18 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
         ssl_key = generate_rsa_key();
     // EVP_PKEY *key = generate_rsa_key();
     if (!ssl_key) {
-        perror("Failed to generate RSA key");
+         
+        LOG(ERROR,"Failed to generate RSA key");
+         
         return -1;
     }
 
     X509 *dynamic_cert = generate_cert(domain, ssl_key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(ssl_key);
-        perror("Failed to generate dynamic certificate");
+         
+        LOG(ERROR,"Failed to generate dynamic certificate");
+         
         return -1;
     }
     
@@ -334,9 +403,11 @@ int setup_ssl_cert(char* domain, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX** ctx,
 
     // SSL 컨텍스트 생성
     *ctx = SSL_CTX_new(TLS_server_method());
-    SSL_CTX_set_min_proto_version(*ctx, TLS1_2_VERSION);
+    // SSL_CTX_set_min_proto_version(*ctx, TLS1_2_VERSION);
     SSL_CTX_set_max_proto_version(*ctx, TLS1_3_VERSION);
-    SSL_CTX_set_cipher_list(*ctx, "HIGH:!aNULL:!MD5:!RC4");
+    // SSL_CTX_set_cipher_list(*ctx, "HIGH:!aNULL:!MD5:!RC4");
+
+    SSL_CTX_set_keylog_callback(*ctx, keylog_callback);
 
     // if (!SSL_CTX_use_certificate_file(*ctx, cert_file, SSL_FILETYPE_PEM)) {
     //     perror("Failed to load certificate from file");
@@ -383,7 +454,7 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
     X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(key);
-        perror("Failed to generate dynamic certificate");
+        LOG(ERROR,"Failed to generate dynamic certificate");
         close(client_sock);
         return NULL;
     }
@@ -394,6 +465,7 @@ char* domain, int port, EVP_PKEY *ca_key, X509 *ca_cert, SSL_CTX* client_ctx) {
     if (!save_cert_and_key(dynamic_cert, key, cert_file, key_file)) {
         EVP_PKEY_free(key);
         X509_free(dynamic_cert);
+         LOG(ERROR,"save_cert_and_key");
         close(client_sock);
         return NULL;
     }
@@ -502,7 +574,7 @@ int make_ssl_cert(const char* domain, EVP_PKEY *ca_key, X509 *ca_cert) {
     X509 *dynamic_cert = generate_cert(domain, key, ca_cert, ca_key,0);
     if (!dynamic_cert) {
         EVP_PKEY_free(key);
-        perror("Failed to generate dynamic certificate");
+        LOG(ERROR,"Failed to generate dynamic certificate");
         return -2;
     }
     

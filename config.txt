@@ -1,5 +1,5 @@
 #proxy server port
-SERVERPORT = 4322
+SERVERPORT = 4321
 
 
 #rootca 인증서, 키 파일 경로
@@ -7,3 +7,10 @@ CERT_FILE = /home/sgseo/proxyserver/certificate.pem
 KEY_FILE = /home/sgseo/proxyserver/private_key.pem
 
 CONNECT_TIME = 5;
+
+AUTH = BASE64
+
+DB_SCRIPT_PATH = ./sql/sqlplus_create.sql
+
+
+LOG_LEVEL = DEBUG

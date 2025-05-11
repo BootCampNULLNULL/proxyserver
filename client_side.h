@@ -7,9 +7,12 @@
 #define CERT_FILE "/home/sgseo/proxyserver/certificate.pem" // 인증서 파일 경로
 #define KEY_FILE  "/home/sgseo/proxyserver/private_key.pem"  // 키 파일 경로
 #define MAX_BUFFER_SIZE 4096
+#include <sqlite3.h>
+#include <sql.h>
+#include <sqlext.h>
 #include "http.h"
 #include "util.h"
-
+#include "db_conn.h"
 typedef enum task_state_t {
     STATE_INITIAL_READ, //CLIENT<->PROXY 프로토콜 파싱
     STATE_CLIENT_CONNECT_REQ, //CLIENT<-http->PROXY<-https->REMOTE, CONNECT 요청
@@ -29,14 +32,14 @@ typedef enum task_state_t {
 } task_state_t;
 
 typedef struct task_t {
-    int client_fd;
+    int *client_fd;
     bool client_side_https; //client<->proxy https 통신
     bool remote_side_https; //proxy<->remote https 통신
     SSL_CTX* client_ctx;
     SSL* client_ssl;
     SSL_CTX* before_client_ctx;
     SSL* before_client_ssl;
-    int remote_fd;
+    int *remote_fd;
     SSL_CTX* remote_ctx;
     SSL* remote_ssl;
     BIO* sbio;
@@ -44,8 +47,11 @@ typedef struct task_t {
     int buffer_len;
     HTTPRequest* req;
     task_state_t state;
+    task_state_t before_state;
     bool auth;
     time_t current_time;
+    int client_port;
+    char *user_id;
 } task_t;
 
 // void set_nonblocking(int fd);
@@ -54,10 +60,20 @@ typedef struct task_t {
 // int connect_remote_http(const char* hostname, int port);
 // SSL* connect_remote_https(int remote_fd, SSL_CTX* remote_ctx);
 
-typedef struct task_arg{
+typedef struct task_arg_t{
     task_t *task;
     int epoll_fd;
     struct epoll_event *ev;
-}task_arg;
+    void (*func)(void *);
+}task_arg_t;
 
+typedef struct thread_cond_t{
+    int ready;
+    pthread_cond_t *cond;
+    pthread_cond_t *thread_cond_lock;
+}thread_cond_t;
+
+void init_tls_db_context();
+void set_tls_db_context(SQLHDBC dbc);
+SQLHSTMT get_tls_db_context();
 #endif //CLIENT_SIDE
