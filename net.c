@@ -931,60 +931,30 @@ int remote_read_with_http(task_t* task, int epoll_fd, struct epoll_event *ev)
             int ret2;
             if(task->client_side_https) ret2 = SSL_write(task->client_ssl, task->buffer,ret);
             else ret2 = send(*task->client_fd, task->buffer,ret,0);
-            task->buffer_len = task->buffer_len + ret;
+            task->buffer_len = task->buffer_len + ret2;
             continue;
         } else if (ret == 0) {
             // remote 연결 종료
-             
             LOG(DEBUG,"remote disconnected\n");
-             
-            if (task->buffer_len == 0) {
-                
-                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, *task->client_fd, NULL);
-                
-                // free_request(task->req); !
-                // close(*task->client_fd);
-                // close(*task->remote_fd);
-                break;
-            } else {
-                break;
-            }
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, *task->client_fd, NULL);
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, *task->remote_fd, NULL);
+            release(task);
+               
         } else {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // 읽을 데이터가 더 이상 없음 
-                // sgseo TO-DO 데이터를 다 읽어서 읽을 데이터가 없는 상황일 수 있는데,, 그럴때는 어떻게 해야되는지 처리 필요
-                 
                 LOG(DEBUG,"No data to read\n");
-                 
                 ev->events = EPOLLIN|EPOLLRDHUP|EPOLLONESHOT;
                 ev->data.ptr = task;
-                
-                epoll_ctl(epoll_fd, EPOLL_CTL_ADD, *task->remote_fd, ev);
-                
+                epoll_ctl(epoll_fd, EPOLL_CTL_MOD, *task->remote_fd, ev);
                 break;
             } else {
                 // recv 실패
                 LOG(ERROR,"recv failed");
-                
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, *task->client_fd, NULL);
-                
-                // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, *task->remote_fd, NULL);
-                // close(*task->client_fd);
-                // close(*task->remote_fd);
-                free(task);
-                // //exit(1);
+                release(task);
             }
         }
     }
-#if 0 /*remote recv()하고 client send() 반복 하도록 수정*/
-    if (task->buffer_len > 0) {
-        printf("Data received from remote: %d bytes\n", task->buffer_len);
-        printf("%s\n", task->buffer);
-        task->state = STATE_CLIENT_WRITE;
-        ev->events = EPOLLOUT ;
-        epoll_ctl(epoll_fd, EPOLL_CTL_MOD, *task->client_fd, ev);
-    }
-#endif
     return STAT_OK;
 }
 
