@@ -107,7 +107,9 @@ int main(void) {
     init_tls_db_context();
 
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGHUP, SIG_IGN); 
 
+    daemonize();
 
         //thread pool 생성 
     pthread_t thread;
@@ -124,12 +126,9 @@ int main(void) {
         pthread_mutex_unlock(&async_mutex);
     }
     while(1){
-        sleep(100);
+        sleep(3600);
     }
 
     
     return 0;
 }
-
-// 문제점 1. STATE_CLIENT_WRITE 상태에서 클라이언트로 최종 수신 종료 이후 세션 유지 or 종료
-// 문제점 2. 응답 버퍼 크기 초과 데이터 고려 필요요

@@ -5,7 +5,7 @@
 int init_proxy();
 int set_current_time(time_t *cur_time);
 int check_valid_time(time_t *start_time);
-
+void daemonize();
 // 해시 테이블 엔트리 구조체
 typedef struct {
     char key[50];   // Key (문자열)

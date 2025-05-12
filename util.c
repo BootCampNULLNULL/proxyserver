@@ -170,3 +170,33 @@ int base64_decode(const char *in, unsigned char *out) {
 // }
 
 
+void daemonize() {
+    pid_t pid, sid;
+
+    // 1단계: 부모 프로세스 종료
+    pid = fork();
+    if (pid < 0) exit(EXIT_FAILURE);
+    if (pid > 0) exit(EXIT_SUCCESS); // 부모 종료
+
+    // 2단계: 새 세션 리더가 되기
+    sid = setsid();
+    if (sid < 0) exit(EXIT_FAILURE);
+
+    // 3단계: 두 번째 fork로 세션 리더 방지
+    pid = fork();
+    if (pid < 0) exit(EXIT_FAILURE);
+    if (pid > 0) exit(EXIT_SUCCESS);
+
+    // 4단계: 파일 모드 마스크 설정
+    umask(0);
+
+    // 5단계: 표준 입출력 리디렉션
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    int fd = open("/dev/null", O_RDWR);
+    dup(fd); // stdout
+    dup(fd); // stderr
+}
+
