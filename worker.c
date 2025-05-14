@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-
+#define _GNU_SOURCE
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +23,8 @@
 #include <openssl/evp.h>
 #include <pthread.h>
 #include <signal.h>
-#include "socket.h"
+#include <sched.h> 
+
 #include "http.h"
 #include "ssl_conn.h"
 #include "client_side.h"
@@ -35,6 +36,9 @@
 #include "worker.h"
 #include "db_conn.h"
 #include "select_user.h"
+
+#define NUM_CPU_CORES 4
+
 extern thread_cond_t *thread_cond;
 extern pthread_mutex_t cond_lock;
 extern pthread_mutex_t mutex_lock; 
@@ -49,9 +53,19 @@ extern SQLHDBC dbc;
 //각 스레드 별 Thread Local Storage(TLS) 이용
 // __thread int thread_local_var = 0;
 
+void bind_thread_to_core(int core_id) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(core_id, &cpuset);
+    pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+}
+
 void *worker_func(void *data)
 {
     int th_idx = *((int*)data);
+
+    bind_thread_to_core(th_idx % NUM_CPU_CORES);
+
     // 쓰레드 동기화용 조건변수
     pthread_mutex_lock(&async_mutex);
     pthread_cond_signal(&async_cond);
@@ -59,6 +73,7 @@ void *worker_func(void *data)
      
     LOG(DEBUG, "Thread[%d] create ", th_idx);
     
+
     
     set_tls_db_context(dbc);
     
@@ -123,7 +138,7 @@ void *worker_func(void *data)
                     int client_fd = accept(server_fd, (struct sockaddr*)&cliaddr, &len);
                     
                     LOG(INFO, "new accept client fd[%d]",client_fd);
-                     
+                    LOG(ERROR, "th_idx[%d] Work!", th_idx);
                     if(client_fd < 0) {
                         if(errno == EAGAIN || errno == EWOULDBLOCK) {
                             // 모든 연결이 처리됨
