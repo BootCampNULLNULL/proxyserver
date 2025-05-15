@@ -1,0 +1,19 @@
+@startuml
+title  TLS Handshake Interception by MITM Proxy
+participant "Client Browser" as C
+participant "MITM Proxy" as P
+participant "Remote Server" as R
+
+C -> P : CONNECT www.example.com:443
+P -> R : Establish TCP connection
+P <-> R : Perform TLS handshake (server-side)
+P -> C : HTTP/1.1 200 Connection Established
+C <-> P : Perform TLS handshake (client-side)
+
+C -> P : Encrypted request using client session key\n(GET /index.html HTTP/1.1)
+P -> P : Decrypt with client session key
+P -> R : Encrypt with server session key\n(GET /index.html HTTP/1.1)
+R -> P : Encrypted response using server session key\n(HTTP/1.1 200 OK)
+P -> P : Decrypt with server session key
+P -> C : Encrypt with client session key\n(HTTP/1.1 200 OK)
+@enduml
